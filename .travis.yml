@@ -16,10 +16,6 @@ script:
   - $script
   - hlint src --cpp-define HLINT
 
-branches:
-  except:
-    - symmetric
-
 notifications:
   irc:
     channels:

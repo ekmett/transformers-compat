@@ -1,3 +1,7 @@
+0.1.1.1
+-------
+* Wrote a better synopsis
+
 0.1.1
 -----
 * Updated to trick `cabal` into building an empty `libHStransformers-compat-0.1.a` on GHC 7.6.

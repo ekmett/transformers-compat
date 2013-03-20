@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.1.1
+version:       0.1.1.1
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -10,7 +10,7 @@ stability:     provisional
 homepage:      http://github.com/ekmett/transformers-compat/
 bug-reports:   http://github.com/ekmett/transformers-compat/issues
 copyright:     Copyright (C) 2012 Edward A. Kmett
-synopsis:      Lenses, Folds and Traversals
+synopsis:      A small compatibility shim exposing the new types from transformers 0.3 to older Haskell platforms.
 description:
   This package includes backported versions of types that were added
   to transformers in transformers 0.3 for users who need strict

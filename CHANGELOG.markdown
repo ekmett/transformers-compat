@@ -1,6 +1,7 @@
 0.3
 ---
 * Added the instances for `Data.Functor.Classes` from `transformers 0.4`
+* Switched `Control.Applicative.Backwards` and `Data.Functor.Reverse` to the split constructor/accessor style from `transformers 0.4`.
 
 0.2
 ---

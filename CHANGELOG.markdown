@@ -1,6 +1,6 @@
 0.3
 ---
-* Added the instances for `Data.Functor.Classes` from `transformers 0.40.3
+* Added the instances for `Data.Functor.Classes` from `transformers 0.4`
 
 0.2
 ---

@@ -72,6 +72,7 @@ library
 
   if flag(transformers2) || flag(transformers3)
     exposed-modules:
-      Data.Functor.Classes
       Control.Monad.Trans.Except
       Control.Monad.Signatures
+      Data.Functor.Classes
+      Data.Functor.Sum

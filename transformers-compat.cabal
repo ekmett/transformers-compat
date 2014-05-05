@@ -18,7 +18,7 @@ description:
   platform, but also need those types.
   .
   Those users should be able to just depend on @transformers >= 0.2@
-  and @transformers-compat@.
+  and @transformers-compat >= 0.3@.
   .
   Note: missing methods are not supplied, but this at least permits the types to be used.
 

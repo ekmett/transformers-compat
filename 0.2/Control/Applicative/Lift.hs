@@ -21,12 +21,37 @@ module Control.Applicative.Lift (
 import Control.Applicative
 import Data.Foldable (Foldable(foldMap))
 import Data.Functor.Constant
+import Data.Functor.Classes
 import Data.Monoid
 import Data.Traversable (Traversable(traverse))
 
 -- | Applicative functor formed by adding pure computations to a given
 -- applicative functor.
 data Lift f a = Pure a | Other (f a)
+
+instance (Eq1 f, Eq a) => Eq (Lift f a) where
+    Pure x1 == Pure x2 = x1 == x2
+    Other y1 == Other y2 = eq1 y1 y2
+    _ == _ = False
+
+instance (Ord1 f, Ord a) => Ord (Lift f a) where
+    compare (Pure x1) (Pure x2) = compare x1 x2
+    compare (Pure _) (Other _) = LT
+    compare (Other _) (Pure _) = GT
+    compare (Other y1) (Other y2) = compare1 y1 y2
+
+instance (Read1 f, Read a) => Read (Lift f a) where
+    readsPrec = readsData $
+        readsUnary "Pure" Pure `mappend` readsUnary1 "Other" Other
+
+instance (Show1 f, Show a) => Show (Lift f a) where
+    showsPrec d (Pure x) = showsUnary "Pure" d x
+    showsPrec d (Other y) = showsUnary1 "Other" d y
+
+instance (Eq1 f) => Eq1 (Lift f) where eq1 = (==)
+instance (Ord1 f) => Ord1 (Lift f) where compare1 = compare
+instance (Read1 f) => Read1 (Lift f) where readsPrec1 = readsPrec
+instance (Show1 f) => Show1 (Lift f) where showsPrec1 = showsPrec
 
 instance (Functor f) => Functor (Lift f) where
     fmap f (Pure x) = Pure (f x)

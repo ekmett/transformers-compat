@@ -1,3 +1,11 @@
+0.3
+---
+* Added the instances for `Data.Functor.Classes` from `transformers 0.40.3
+
+0.2
+---
+* Added the new types and classes from `transformers 0.4`
+
 0.1.1.1
 -------
 * Wrote a better synopsis

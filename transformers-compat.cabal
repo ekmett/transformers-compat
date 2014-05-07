@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.3
+version:       0.3.1
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -52,18 +52,16 @@ library
   other-modules:
     Paths_transformers_compat
 
-  if flag(transformers2)
-    hs-source-dirs: 0.2 0.3
-    build-depends:
-      transformers >= 0.2 && < 0.3
+  if flag(transformers3)
+    hs-source-dirs: 0.3
+    build-depends: transformers >= 0.3 && < 0.4
   else
-    if flag(transformers3)
-      hs-source-dirs: 0.3
-      build-depends:
-        transformers >= 0.3 && < 0.4
+    if flag(transformers2)
+      hs-source-dirs: 0.2 0.3
+      build-depends: transformers >= 0.2 && < 0.3
     else
-      build-depends:
-        transformers >= 0.4 && < 0.5
+      else
+        build-depends: transformers >= 0.4.1 && < 0.5
 
   if flag(transformers2)
     exposed-modules:

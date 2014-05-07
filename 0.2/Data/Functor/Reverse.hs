@@ -26,10 +26,7 @@ import Data.Monoid
 
 -- | The same functor, but with 'Foldable' and 'Traversable' instances
 -- that process the elements in the reverse order.
-newtype Reverse f a = Reverse (f a)
-
-getReverse :: Reverse f a -> f a
-getReverse (Reverse as) = as
+newtype Reverse f a = Reverse { getReverse :: f a }
 
 -- | Derived instance.
 instance (Functor f) => Functor (Reverse f) where

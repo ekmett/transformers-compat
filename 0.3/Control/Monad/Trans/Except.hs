@@ -95,7 +95,7 @@ withExcept = withExceptT
 -- The 'return' function yields a computation that produces the given
 -- value, while @>>=@ sequences two subcomputations, exiting on the
 -- first exception.
-newtype ExceptT e m a = ExceptT (m (Either e a))
+newtype ExceptT e m a = ExceptT { runExceptT :: m (Either e a) }
 
 instance (Eq e, Eq1 m, Eq a) => Eq (ExceptT e m a) where
     ExceptT x == ExceptT y = eq1 x y
@@ -113,10 +113,6 @@ instance (Eq e, Eq1 m) => Eq1 (ExceptT e m) where eq1 = (==)
 instance (Ord e, Ord1 m) => Ord1 (ExceptT e m) where compare1 = compare
 instance (Read e, Read1 m) => Read1 (ExceptT e m) where readsPrec1 = readsPrec
 instance (Show e, Show1 m) => Show1 (ExceptT e m) where showsPrec1 = showsPrec
-
--- | The inverse of 'ExceptT'.
-runExceptT :: ExceptT e m a -> m (Either e a)
-runExceptT (ExceptT m) = m
 
 -- | Map the unwrapped computation using the given function.
 --

@@ -22,11 +22,7 @@ import Data.Traversable
 
 -- | The same functor, but with an 'Applicative' instance that performs
 -- actions in the reverse order.
-newtype Backwards f a = Backwards (f a)
-
--- | Inverse of 'Backwards'.
-forwards :: Backwards f a -> f a
-forwards (Backwards x) = x
+newtype Backwards f a = Backwards { forwards :: f a }
 
 -- | Derived instance.
 instance (Functor f) => Functor (Backwards f) where

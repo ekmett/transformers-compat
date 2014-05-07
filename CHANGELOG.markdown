@@ -1,3 +1,7 @@
+0.3.1
+-----
+* `transformers 0.4.1` compatibility
+
 0.3
 ---
 * Added the instances for `Data.Functor.Classes` from `transformers 0.4`

@@ -14,7 +14,8 @@ install:
 
 script:
   - $script
-  - hlint src --cpp-define HLINT
+  - hlint 0.2 --cpp-define HLINT
+  - hlint 0.3 --cpp-define HLINT
 
 notifications:
   irc:

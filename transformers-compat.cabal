@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.3.2
+version:       0.3.3
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -37,13 +37,13 @@ source-repository head
   type: git
   location: git://github.com/ekmett/transformers-compat.git
 
-flag transformers2
+flag two
   default: False
   description: Use transformers 0.2. This must be selected manually and should
     probably only be used on older GHCs around 7.0.x.
-  manual: True
+  manual: False
 
-flag transformers3
+flag three
   default: False
   manual: False
   description: Use transformers 0.3. This should toggle on/off automatically.
@@ -55,23 +55,23 @@ library
   other-modules:
     Paths_transformers_compat
 
-  if flag(transformers3)
+  if flag(three)
     hs-source-dirs: 0.3
     build-depends: transformers >= 0.3 && < 0.4
   else
-    if flag(transformers2)
+    if flag(two)
       hs-source-dirs: 0.2 0.3
       build-depends: transformers >= 0.2 && < 0.3
     else
       build-depends: transformers >= 0.4.1 && < 0.5
 
-  if flag(transformers2)
+  if flag(two)
     exposed-modules:
       Control.Applicative.Backwards
       Control.Applicative.Lift
       Data.Functor.Reverse
 
-  if flag(transformers2) || flag(transformers3)
+  if flag(two) || flag(three)
     exposed-modules:
       Control.Monad.Trans.Except
       Control.Monad.Signatures

@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.3.3
+version:       0.3.3.2
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -39,14 +39,14 @@ source-repository head
   location: git://github.com/ekmett/transformers-compat.git
 
 flag two
-  default: False
+  default: True
   description: Use transformers 0.2. This must be selected manually and should
     probably only be used on older GHCs around 7.0.x.
-  manual: False
+  manual: True
 
 flag three
   default: False
-  manual: False
+  manual: True
   description: Use transformers 0.3. This should toggle on/off automatically.
 
 library

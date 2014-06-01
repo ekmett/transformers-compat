@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.3.3.3
+version:       0.3.3.4
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -45,7 +45,7 @@ flag two
   manual: True
 
 flag three
-  default: True
+  default: False
   manual: True
   description: Use transformers 0.3. This should toggle on/off automatically.
 

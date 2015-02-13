@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.3.3.4
+version:       0.4.0.4
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -49,6 +49,11 @@ flag three
   manual: True
   description: Use transformers 0.3. This should toggle on/off automatically.
 
+flag mtl
+  default: True
+  manual: True
+  description: -f-mtl Disables support for mtl for transformers 0.2 and 0.3. That is an unsupported configuration, and results in missing instances for `ExceptT`, but keeps the package Haskell 98.
+
 library
   build-depends:
     base >= 4.3 && < 5
@@ -58,13 +63,20 @@ library
 
   if flag(three)
     hs-source-dirs: 0.3
-    build-depends: transformers >= 0.3 && < 0.4
+    build-depends:
+      transformers >= 0.3 && < 0.4
+      mtl >= 2.1 && < 2.2
   else
     if flag(two)
       hs-source-dirs: 0.2 0.3
-      build-depends: transformers >= 0.2 && < 0.3
+      build-depends:
+        transformers >= 0.2 && < 0.3
+        mtl >= 2.0 && < 2.1
     else
       build-depends: transformers >= 0.4.1 && < 0.5
+
+  if !flag(mtl)
+    cpp-options: -DHASKELL98
 
   if flag(two)
     exposed-modules:

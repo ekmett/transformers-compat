@@ -1,7 +1,13 @@
+{-# LANGUAGE CPP #-}
+
+#ifndef MIN_VERSION_mtl
+#define MIN_VERSION_mtl(x,y,z) 1
+#endif
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Control.Monad.Trans.Except
 -- Copyright   :  (C) 2013 Ross Paterson
+--                (C) 2015 Edward Kmett
 -- License     :  BSD-style (see the file LICENSE)
 --
 -- Maintainer  :  ross@soi.city.ac.uk
@@ -39,16 +45,24 @@ module Control.Monad.Trans.Except (
     liftPass,
   ) where
 
-import Control.Monad.IO.Class
-import Control.Monad.Signatures
-import Control.Monad.Trans.Class
-import Data.Functor.Classes
-import Data.Functor.Identity
-
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Fix
+import Control.Monad.IO.Class
+import Control.Monad.Signatures
+import Control.Monad.Trans.Class
+
+#ifndef HASKELL98
+import Control.Monad.Writer.Class
+import Control.Monad.State.Class
+import Control.Monad.Reader.Class
+import Control.Monad.Cont.Class
+import Control.Monad.Error.Class
+#endif
+
 import Data.Foldable (Foldable(foldMap))
+import Data.Functor.Classes
+import Data.Functor.Identity
 import Data.Monoid
 import Data.Traversable (Traversable(traverse))
 
@@ -223,3 +237,38 @@ liftPass pass = mapExceptT $ \ m -> pass $ do
     return $! case a of
         Left l -> (Left l, id)
         Right (r, f) -> (Right r, f)
+
+-- incurring the mtl dependency for these avoids packages that need them introducing orphans.
+
+#ifndef HASKELL98
+
+instance Monad m => MonadError e (ExceptT e m) where
+    throwError = throwE
+    catchError = catchE
+
+instance MonadWriter w m => MonadWriter w (ExceptT e m) where
+    writer = lift . writer
+    tell   = lift . tell
+    listen = liftListen listen
+    pass   = liftPass pass
+
+instance MonadState s m => MonadState s (ExceptT e m) where
+  get = lift get
+  put = lift . put
+#if MIN_VERSION_mtl(2,1,0)
+  state = lift . state
+#endif
+
+instance MonadReader r m => MonadReader r (ExceptT e m) where
+  ask    = lift ask
+  local  = mapExceptT . local
+#if MIN_VERSION_mtl(2,1,0)
+  reader = lift . reader
+#endif
+
+instance MonadRWS r w s m => MonadRWS r w s (ExceptT e m)
+
+instance MonadCont m => MonadCont (ExceptT e m) where
+  callCC = Except.liftCallCC callCC
+
+#endif

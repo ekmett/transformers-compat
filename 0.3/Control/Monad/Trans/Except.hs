@@ -248,10 +248,12 @@ instance Monad m => MonadError e (ExceptT e m) where
     catchError = catchE
 
 instance MonadWriter w m => MonadWriter w (ExceptT e m) where
-    writer = lift . writer
     tell   = lift . tell
     listen = liftListen listen
     pass   = liftPass pass
+#if MIN_VERSION_mtl(2,1,0)
+    writer = lift . writer
+#endif
 
 instance MonadState s m => MonadState s (ExceptT e m) where
   get = lift get

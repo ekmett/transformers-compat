@@ -272,6 +272,6 @@ instance MonadReader r m => MonadReader r (ExceptT e m) where
 instance MonadRWS r w s m => MonadRWS r w s (ExceptT e m)
 
 instance MonadCont m => MonadCont (ExceptT e m) where
-  callCC = Except.liftCallCC callCC
+  callCC = liftCallCC callCC
 
 #endif

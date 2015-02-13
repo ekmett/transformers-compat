@@ -64,13 +64,13 @@ library
   if flag(three)
     hs-source-dirs: 0.3
     build-depends:
-      transformers >= 0.3 && < 0.4
+      transformers >= 0.3 && < 0.4,
       mtl >= 2.1 && < 2.2
   else
     if flag(two)
       hs-source-dirs: 0.2 0.3
       build-depends:
-        transformers >= 0.2 && < 0.3
+        transformers >= 0.2 && < 0.3,
         mtl >= 2.0 && < 2.1
     else
       build-depends: transformers >= 0.4.1 && < 0.5

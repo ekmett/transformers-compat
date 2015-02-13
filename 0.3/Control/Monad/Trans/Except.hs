@@ -3,6 +3,12 @@
 #ifndef MIN_VERSION_mtl
 #define MIN_VERSION_mtl(x,y,z) 1
 #endif
+
+#ifndef HASKELL98
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
+#endif
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Control.Monad.Trans.Except

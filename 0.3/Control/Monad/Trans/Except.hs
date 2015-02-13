@@ -58,6 +58,7 @@ import Control.Monad.State.Class
 import Control.Monad.Reader.Class
 import Control.Monad.Cont.Class
 import Control.Monad.Error.Class
+import Control.Monad.RWS.Class
 #endif
 
 import Data.Foldable (Foldable(foldMap))

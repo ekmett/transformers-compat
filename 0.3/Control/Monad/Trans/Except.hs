@@ -1,5 +1,9 @@
 {-# LANGUAGE CPP #-}
 
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(x,y,z) 1
+#endif
+
 #ifndef MIN_VERSION_mtl
 #define MIN_VERSION_mtl(x,y,z) 1
 #endif
@@ -8,6 +12,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
+# if __GLASGOW_HASKELL__ >= 702
+{-# LANGUAGE Safe #-}
+# endif
 #endif
 -----------------------------------------------------------------------------
 -- |
@@ -57,6 +64,9 @@ import Control.Monad.Fix
 import Control.Monad.IO.Class
 import Control.Monad.Signatures
 import Control.Monad.Trans.Class
+#if MIN_VERSION_base(4,4,0)
+import Control.Monad.Zip (MonadZip(mzipWith))
+#endif
 
 #ifndef HASKELL98
 import Control.Monad.Writer.Class
@@ -117,22 +127,33 @@ withExcept = withExceptT
 -- first exception.
 newtype ExceptT e m a = ExceptT { runExceptT :: m (Either e a) }
 
-instance (Eq e, Eq1 m, Eq a) => Eq (ExceptT e m a) where
-    ExceptT x == ExceptT y = eq1 x y
+instance (Eq e, Eq1 m) => Eq1 (ExceptT e m) where
+    liftEq eq (ExceptT x) (ExceptT y) = liftEq (liftEq eq) x y
 
-instance (Ord e, Ord1 m, Ord a) => Ord (ExceptT e m a) where
-    compare (ExceptT x) (ExceptT y) = compare1 x y
+instance (Ord e, Ord1 m) => Ord1 (ExceptT e m) where
+    liftCompare comp (ExceptT x) (ExceptT y) =
+        liftCompare (liftCompare comp) x y
 
+instance (Read e, Read1 m) => Read1 (ExceptT e m) where
+    liftReadsPrec rp rl = readsData $
+        readsUnaryWith (liftReadsPrec rp' rl') "ExceptT" ExceptT
+      where
+        rp' = liftReadsPrec rp rl
+        rl' = liftReadList rp rl
+
+instance (Show e, Show1 m) => Show1 (ExceptT e m) where
+    liftShowsPrec sp sl d (ExceptT m) =
+        showsUnaryWith (liftShowsPrec sp' sl') "ExceptT" d m
+      where
+        sp' = liftShowsPrec sp sl
+        sl' = liftShowList sp sl
+
+instance (Eq e, Eq1 m, Eq a) => Eq (ExceptT e m a) where (==) = eq1
+instance (Ord e, Ord1 m, Ord a) => Ord (ExceptT e m a) where compare = compare1
 instance (Read e, Read1 m, Read a) => Read (ExceptT e m a) where
-    readsPrec = readsData $ readsUnary1 "ExceptT" ExceptT
-
+    readsPrec = readsPrec1
 instance (Show e, Show1 m, Show a) => Show (ExceptT e m a) where
-    showsPrec d (ExceptT m) = showsUnary1 "ExceptT" d m
-
-instance (Eq e, Eq1 m) => Eq1 (ExceptT e m) where eq1 = (==)
-instance (Ord e, Ord1 m) => Ord1 (ExceptT e m) where compare1 = compare
-instance (Read e, Read1 m) => Read1 (ExceptT e m) where readsPrec1 = readsPrec
-instance (Show e, Show1 m) => Show1 (ExceptT e m) where showsPrec1 = showsPrec
+    showsPrec = showsPrec1
 
 -- | Map the unwrapped computation using the given function.
 --
@@ -170,8 +191,12 @@ instance (Functor m, Monad m) => Applicative (ExceptT e m) where
                     Right x -> return (Right (k x))
 
 instance (Functor m, Monad m, Monoid e) => Alternative (ExceptT e m) where
-    empty = mzero
-    (<|>) = mplus
+    empty = ExceptT $ return (Left mempty)
+    ExceptT mx <|> ExceptT my = ExceptT $ do
+        ex <- mx
+        case ex of
+            Left e -> liftM (either (Left . mappend e) Right) my
+            Right x -> return (Right x)
 
 instance (Monad m) => Monad (ExceptT e m) where
     return a = ExceptT $ return (Right a)
@@ -191,15 +216,19 @@ instance (Monad m, Monoid e) => MonadPlus (ExceptT e m) where
             Right x -> return (Right x)
 
 instance (MonadFix m) => MonadFix (ExceptT e m) where
-    mfix f = ExceptT $ mfix $ \ a -> runExceptT $ f $ case a of
-        Right x -> x
-        Left _ -> error "mfix ExceptT: Left"
+    mfix f = ExceptT (mfix (runExceptT . f . either (const bomb) id))
+      where bomb = error "mfix (ExceptT): inner computation returned Left value"
 
 instance MonadTrans (ExceptT e) where
     lift = ExceptT . liftM Right
 
 instance (MonadIO m) => MonadIO (ExceptT e m) where
     liftIO = lift . liftIO
+
+#if MIN_VERSION_base(4,4,0)
+instance (MonadZip m) => MonadZip (ExceptT e m) where
+    mzipWith f (ExceptT a) (ExceptT b) = ExceptT $ mzipWith (liftA2 f) a b
+#endif
 
 -- | Signal an exception value @e@.
 --

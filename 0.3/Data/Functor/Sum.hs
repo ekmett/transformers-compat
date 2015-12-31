@@ -1,3 +1,25 @@
+{-# LANGUAGE CPP #-}
+
+#ifndef HASKELL98
+# if __GLASGOW_HASKELL__ >= 702
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE EmptyDataDecls #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+# endif
+# if __GLASGOW_HASKELL__ >= 704
+{-# LANGUAGE PolyKinds #-}
+# endif
+# if __GLASGOW_HASKELL__ >= 708
+{-# LANGUAGE AutoDeriveTypeable #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE KindSignatures #-}
+# endif
+#endif
 -- |
 -- Module      :  Data.Functor.Sum
 -- Copyright   :  (c) Ross Paterson 2014
@@ -19,32 +41,84 @@ import Data.Functor.Classes
 import Data.Monoid (mappend)
 import Data.Traversable (Traversable(traverse))
 
+#ifndef HASKELL98
+# if __GLASGOW_HASKELL__ >= 702
+import GHC.Generics
+# endif
+# if __GLASGOW_HASKELL__ >= 708
+import Data.Data
+# endif
+#endif
+
 -- | Lifted sum of functors.
 data Sum f g a = InL (f a) | InR (g a)
 
+#ifndef HASKELL98
+# if __GLASGOW_HASKELL__ >= 702
+deriving instance Generic (Sum f g a)
+
+instance Generic1 (Sum f g) where
+    type Rep1 (Sum f g) =
+      D1 MDSum (C1 MCInL (S1 NoSelector (Rec1 f))
+            :+: C1 MCInR (S1 NoSelector (Rec1 g)))
+    from1 (InL f) = M1 (L1 (M1 (M1 (Rec1 f))))
+    from1 (InR g) = M1 (R1 (M1 (M1 (Rec1 g))))
+    to1 (M1 (L1 (M1 (M1 f)))) = InL (unRec1 f)
+    to1 (M1 (R1 (M1 (M1 g)))) = InR (unRec1 g)
+
+data MDSum
+data MCInL
+data MCInR
+
+instance Datatype MDSum where
+    datatypeName _ = "Sum"
+    moduleName   _ = "Data.Functor.Sum"
+
+instance Constructor MCInL where
+    conName _ = "InL"
+
+instance Constructor MCInR where
+    conName _ = "InR"
+# endif
+
+# if __GLASGOW_HASKELL__ >= 708
+deriving instance Typeable Sum
+deriving instance (Data (f a), Data (g a), Typeable f, Typeable g, Typeable a)
+               => Data (Sum (f :: * -> *) (g :: * -> *) (a :: *))
+# endif
+#endif
+
+instance (Eq1 f, Eq1 g) => Eq1 (Sum f g) where
+    liftEq eq (InL x1) (InL x2) = liftEq eq x1 x2
+    liftEq _ (InL _) (InR _) = False
+    liftEq _ (InR _) (InL _) = False
+    liftEq eq (InR y1) (InR y2) = liftEq eq y1 y2
+
+instance (Ord1 f, Ord1 g) => Ord1 (Sum f g) where
+    liftCompare comp (InL x1) (InL x2) = liftCompare comp x1 x2
+    liftCompare _ (InL _) (InR _) = LT
+    liftCompare _ (InR _) (InL _) = GT
+    liftCompare comp (InR y1) (InR y2) = liftCompare comp y1 y2
+
+instance (Read1 f, Read1 g) => Read1 (Sum f g) where
+    liftReadsPrec rp rl = readsData $
+        readsUnaryWith (liftReadsPrec rp rl) "InL" InL `mappend`
+        readsUnaryWith (liftReadsPrec rp rl) "InR" InR
+
+instance (Show1 f, Show1 g) => Show1 (Sum f g) where
+    liftShowsPrec sp sl d (InL x) =
+        showsUnaryWith (liftShowsPrec sp sl) "InL" d x
+    liftShowsPrec sp sl d (InR y) =
+        showsUnaryWith (liftShowsPrec sp sl) "InR" d y
+
 instance (Eq1 f, Eq1 g, Eq a) => Eq (Sum f g a) where
-    InL x1 == InL x2 = eq1 x1 x2
-    InR y1 == InR y2 = eq1 y1 y2
-    _ == _ = False
-
+    (==) = eq1
 instance (Ord1 f, Ord1 g, Ord a) => Ord (Sum f g a) where
-    compare (InL x1) (InL x2) = compare1 x1 x2
-    compare (InL _) (InR _) = LT
-    compare (InR _) (InL _) = GT
-    compare (InR y1) (InR y2) = compare1 y1 y2
-
+    compare = compare1
 instance (Read1 f, Read1 g, Read a) => Read (Sum f g a) where
-    readsPrec = readsData $
-        readsUnary1 "InL" InL `mappend` readsUnary1 "InR" InR
-
+    readsPrec = readsPrec1
 instance (Show1 f, Show1 g, Show a) => Show (Sum f g a) where
-    showsPrec d (InL x) = showsUnary1 "InL" d x
-    showsPrec d (InR y) = showsUnary1 "InR" d y
-
-instance (Eq1 f, Eq1 g) => Eq1 (Sum f g) where eq1 = (==)
-instance (Ord1 f, Ord1 g) => Ord1 (Sum f g) where compare1 = compare
-instance (Read1 f, Read1 g) => Read1 (Sum f g) where readsPrec1 = readsPrec
-instance (Show1 f, Show1 g) => Show1 (Sum f g) where showsPrec1 = showsPrec
+    showsPrec = showsPrec1
 
 instance (Functor f, Functor g) => Functor (Sum f g) where
     fmap f (InL x) = InL (fmap f x)

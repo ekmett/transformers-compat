@@ -1,3 +1,13 @@
+{-# LANGUAGE CPP #-}
+
+#ifndef HASKELL98
+# if __GLASGOW_HASKELL__ >= 702
+{-# LANGUAGE Safe #-}
+# endif
+# if __GLASGOW_HASKELL__ >= 704
+{-# LANGUAGE PolyKinds #-}
+# endif
+#endif
 -- |
 -- Module      :  Data.Functor.Reverse
 -- Copyright   :  (c) Russell O'Connor 2009
@@ -16,17 +26,36 @@
 module Data.Functor.Reverse where
 
 import Control.Applicative.Backwards
+import Data.Functor.Classes
 
 import Prelude hiding (foldr, foldr1, foldl, foldl1)
 import Control.Applicative
 import Data.Foldable
-import Data.Functor.Classes
 import Data.Traversable
 import Data.Monoid
 
 -- | The same functor, but with 'Foldable' and 'Traversable' instances
 -- that process the elements in the reverse order.
 newtype Reverse f a = Reverse { getReverse :: f a }
+
+instance (Eq1 f) => Eq1 (Reverse f) where
+    liftEq eq (Reverse x) (Reverse y) = liftEq eq x y
+
+instance (Ord1 f) => Ord1 (Reverse f) where
+    liftCompare comp (Reverse x) (Reverse y) = liftCompare comp x y
+
+instance (Read1 f) => Read1 (Reverse f) where
+    liftReadsPrec rp rl = readsData $
+        readsUnaryWith (liftReadsPrec rp rl) "Reverse" Reverse
+
+instance (Show1 f) => Show1 (Reverse f) where
+    liftShowsPrec sp sl d (Reverse x) =
+        showsUnaryWith (liftShowsPrec sp sl) "Reverse" d x
+
+instance (Eq1 f, Eq a) => Eq (Reverse f a) where (==) = eq1
+instance (Ord1 f, Ord a) => Ord (Reverse f a) where compare = compare1
+instance (Read1 f, Read a) => Read (Reverse f a) where readsPrec = readsPrec1
+instance (Show1 f, Show a) => Show (Reverse f a) where showsPrec = showsPrec1
 
 -- | Derived instance.
 instance (Functor f) => Functor (Reverse f) where
@@ -56,21 +85,3 @@ instance (Traversable f) => Traversable (Reverse f) where
         fmap Reverse . forwards $ traverse (Backwards . f) t
     sequenceA (Reverse t) =
         fmap Reverse . forwards $ sequenceA (fmap Backwards t)
-
-instance (Eq1 f, Eq a) => Eq (Reverse f a) where
-    Reverse x == Reverse y = eq1 x y
-
-instance (Ord1 f, Ord a) => Ord (Reverse f a) where
-    compare (Reverse x) (Reverse y) = compare1 x y
-
-instance (Read1 f, Read a) => Read (Reverse f a) where
-    readsPrec = readsData $ readsUnary1 "Reverse" Reverse
-
-instance (Show1 f, Show a) => Show (Reverse f a) where
-    showsPrec d (Reverse x) = showsUnary1 "Reverse" d x
-
-instance Eq1 f => Eq1 (Reverse f) where eq1 = (==)
-instance Ord1 f => Ord1 (Reverse f) where compare1 = compare
-instance Read1 f => Read1 (Reverse f) where readsPrec1 = readsPrec
-instance Show1 f => Show1 (Reverse f) where showsPrec1 = showsPrec
-

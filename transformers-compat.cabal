@@ -13,7 +13,7 @@ copyright:     Copyright (C) 2012 Edward A. Kmett
 synopsis:      A small compatibility shim exposing the new types from transformers 0.3 and 0.4 to older Haskell platforms.
 description:
   This package includes backported versions of types that were added
-  to transformers in transformers 0.3 and 0.4 for users who need strict
+  to transformers in transformers 0.3, 0.4, and 0.5 for users who need strict
   transformers 0.2 or 0.3 compatibility to run on old versions of the
   platform, but also need those types.
   .
@@ -73,10 +73,12 @@ library
         transformers >= 0.2 && < 0.3,
         mtl >= 2.0 && < 2.1
     else
-      build-depends: transformers >= 0.4.1 && < 0.5
+      build-depends: transformers >= 0.4.1 && < 0.6
 
   if !flag(mtl)
     cpp-options: -DHASKELL98
+  else
+    build-depends: ghc-prim
 
   if flag(two)
     exposed-modules:

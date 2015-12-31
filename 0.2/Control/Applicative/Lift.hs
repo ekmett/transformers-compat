@@ -1,8 +1,10 @@
 {-# LANGUAGE CPP #-}
 
 #ifndef HASKELL98
-# if __GLASGOW_HASKELL__ >= 702
+# if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
+# elif __GLASGOW_HASKELL__ >= 702
+{-# LANGUAGE Trustworthy #-}
 # endif
 #endif
 -- |
@@ -18,17 +20,6 @@
 --
 -- NB: This module is only included in @lens@ for backwards compatibility with
 -- @transformers@ versions before 3.0.
-
-module Control.Applicative.Lift (
-    -- * Lifting an applicative
-    Lift(..),
-    unLift,
-    mapLift,
-    -- * Collecting errors
-    Errors,
-    runErrors,
-    failure
-  ) where
 
 module Control.Applicative.Lift (
     -- * Lifting an applicative

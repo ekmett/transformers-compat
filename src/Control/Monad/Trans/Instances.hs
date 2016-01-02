@@ -14,9 +14,9 @@
 {-# LANGUAGE Trustworthy #-}
 # endif
 
-#if __GLASGOW_HASKELL__ >= 704
+# if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE PolyKinds #-}
-#endif
+# endif
 
 # if __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE DataKinds #-}
@@ -262,11 +262,11 @@ deriving instance Typeable Reverse
 deriving instance Typeable Lazy.StateT
 deriving instance Typeable Strict.StateT
 
-#    if !(MIN_VERSION_base(4,9,0))
+#   if !(MIN_VERSION_base(4,9,0))
 deriving instance Typeable Compose
 deriving instance Typeable MonadIO
 deriving instance Typeable Product
-#    endif
+#   endif
 #  endif
 
 -- Identity instances

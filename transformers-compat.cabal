@@ -58,6 +58,12 @@ library
   build-depends:
     base >= 4.3 && < 5
 
+  hs-source-dirs:
+    src
+
+  exposed-modules:
+    Control.Monad.Trans.Instances
+
   other-modules:
     Paths_transformers_compat
 

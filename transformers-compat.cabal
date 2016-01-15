@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.4.0.4
+version:       0.5.0.4
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -40,14 +40,13 @@ source-repository head
 
 flag two
   default: False
-  description: Use transformers 0.2. This must be selected manually and should
-    probably only be used on older GHCs around 7.0.x.
+  description: Use transformers 0.2. This will be selected by cabal picking the appropriate version.
   manual: True
 
 flag three
   default: False
   manual: True
-  description: Use transformers 0.3. This should toggle on/off automatically.
+  description: Use transformers 0.3. This will be selected by cabal picking the appropriate version.
 
 flag mtl
   default: True

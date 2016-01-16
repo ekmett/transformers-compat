@@ -9,7 +9,7 @@ maintainer:    Edward A. Kmett <ekmett@gmail.com>
 stability:     provisional
 homepage:      http://github.com/ekmett/transformers-compat/
 bug-reports:   http://github.com/ekmett/transformers-compat/issues
-copyright:     Copyright (C) 2012 Edward A. Kmett
+copyright:     Copyright (C) 2012-2015 Edward A. Kmett
 synopsis:      A small compatibility shim exposing the new types from transformers 0.3 and 0.4 to older Haskell platforms.
 description:
   This package includes backported versions of types that were added

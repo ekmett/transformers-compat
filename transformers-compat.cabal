@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.5.0.3
+version:       0.5.1.4
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -23,7 +23,7 @@ description:
   Note: missing methods are not supplied, but this at least permits the types to be used.
 
 build-type:    Simple
-tested-with:   GHC == 7.0.4, GHC == 7.4.1, GHC == 7.4.2, GHC == 7.6.1, GHC == 7.8.2
+tested-with:   GHC == 7.0.4, GHC == 7.4.1, GHC == 7.4.2, GHC == 7.6.1, GHC == 7.8.2, GHC == 7.10.3, GHC == 8.0.1
 extra-source-files:
   .travis.yml
   .ghci
@@ -44,7 +44,7 @@ flag two
   manual: True
 
 flag three
-  default: True
+  default: False
   manual: True
   description: Use transformers 0.3. This will be selected by cabal picking the appropriate version.
 

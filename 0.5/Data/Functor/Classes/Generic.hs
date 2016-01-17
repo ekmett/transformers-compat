@@ -10,6 +10,9 @@ module Data.Functor.Classes.Generic
 
 import GHC.Generics
 import Data.Functor.Classes
+#if __GLASGOW_HASKELL__ < 710
+import Data.Monoid
+#endif
 
 ---------------------------------------------------------------------------------------
 -- * Eq1

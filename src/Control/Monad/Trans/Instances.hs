@@ -75,9 +75,11 @@ import           Control.Applicative
 import           Control.Monad (MonadPlus(..))
 import           Control.Monad.Fix (MonadFix(..))
 import           Data.Foldable (Foldable(..))
+import           Data.Ix (Ix(..))
 import           Data.Maybe (fromMaybe)
 import           Data.Monoid (Monoid(..))
 import           Data.Traversable (Traversable(..))
+import           Foreign (Storable(..), castPtr)
 
 #if MIN_VERSION_base(4,4,0)
 import           Control.Monad.Zip (MonadZip(..))
@@ -382,5 +384,40 @@ deriving instance (Data (f a), Data (g a), Typeable f, Typeable g, Typeable a)
                => Data (Product (f :: * -> *) (g :: * -> *) (a :: *))
 #   endif
 #  endif
+# endif
+#endif
+
+#if !(MIN_VERSION_transformers(0,5,1))
+# if !(MIN_VERSION_base(4,8,0))
+instance (Bounded a) => Bounded (Identity a) where
+    minBound = Identity minBound
+    maxBound = Identity maxBound
+
+instance (Enum a) => Enum (Identity a) where
+    succ (Identity x)     = Identity (succ x)
+    pred (Identity x)     = Identity (pred x)
+    toEnum i              = Identity (toEnum i)
+    fromEnum (Identity x) = fromEnum x
+    enumFrom (Identity x) = map Identity (enumFrom x)
+    enumFromThen (Identity x) (Identity y) = map Identity (enumFromThen x y)
+    enumFromTo   (Identity x) (Identity y) = map Identity (enumFromTo   x y)
+    enumFromThenTo (Identity x) (Identity y) (Identity z) =
+        map Identity (enumFromThenTo x y z)
+
+instance (Ix a) => Ix (Identity a) where
+    range     (Identity x, Identity y) = map Identity (range (x, y))
+    index     (Identity x, Identity y) (Identity i) = index     (x, y) i
+    inRange   (Identity x, Identity y) (Identity e) = inRange   (x, y) e
+    rangeSize (Identity x, Identity y) = rangeSize (x, y)
+
+instance (Storable a) => Storable (Identity a) where
+    sizeOf    (Identity x)       = sizeOf x
+    alignment (Identity x)       = alignment x
+    peekElemOff p i              = fmap Identity (peekElemOff (castPtr p) i)
+    pokeElemOff p i (Identity x) = pokeElemOff (castPtr p) i x
+    peekByteOff p i              = fmap Identity (peekByteOff p i)
+    pokeByteOff p i (Identity x) = pokeByteOff p i x
+    peek p                       = fmap runIdentity (peek (castPtr p))
+    poke p (Identity x)          = poke (castPtr p) x
 # endif
 #endif

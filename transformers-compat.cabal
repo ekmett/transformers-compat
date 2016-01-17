@@ -48,10 +48,15 @@ flag three
   manual: True
   description: Use transformers 0.3. This will be selected by cabal picking the appropriate version.
 
+flag four
+  default: False
+  manual: True
+  description: Use transformers 0.4. This will be selected by cabal picking the appropriate version.
+
 flag mtl
   default: True
   manual: True
-  description: -f-mtl Disables support for mtl for transformers 0.2 and 0.3. That is an unsupported configuration, and results in missing instances for `ExceptT`, but keeps the package Haskell 98.
+  description: -f-mtl Disables support for mtl for transformers 0.2 and 0.3. That is an unsupported configuration, and results in missing instances for `ExceptT`.
 
 library
   build-depends:
@@ -66,19 +71,23 @@ library
   other-modules:
     Paths_transformers_compat
 
-  if flag(three)
-    hs-source-dirs: 0.3
-    build-depends:
-      transformers >= 0.3 && < 0.4,
-      mtl >= 2.1 && < 2.2
+  if flag(four)
+    build-depends: transformers >= 0.4 && < 0.5
   else
-    if flag(two)
-      hs-source-dirs: 0.2 0.3
-      build-depends:
-        transformers >= 0.2 && < 0.3,
-        mtl >= 2.0 && < 2.1
+    hs-source-dirs: 0.5
+    if impl(ghc >=7.4 && < 7.6)
+      build-depends: ghc-prim
+
+    if flag(three)
+      hs-source-dirs: 0.3
+      build-depends: transformers >= 0.3 && < 0.4, mtl >= 2.1 && < 2.2
     else
-      build-depends: transformers >= 0.4.1 && < 0.6
+      if flag(two)
+        hs-source-dirs: 0.2 0.3
+        build-depends:
+          transformers >= 0.2 && < 0.3, mtl >= 2.0 && < 2.1
+      else
+        build-depends: transformers >= 0.5 && < 0.6
 
   if !flag(mtl)
     cpp-options: -DHASKELL98
@@ -97,3 +106,7 @@ library
       Control.Monad.Signatures
       Data.Functor.Classes
       Data.Functor.Sum
+
+  if !flag(four)
+    exposed-modules:
+      Data.Functor.Classes.Generic

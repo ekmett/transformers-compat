@@ -14,7 +14,7 @@
 {-# LANGUAGE Trustworthy #-}
 # endif
 
-# if __GLASGOW_HASKELL__ >= 704
+# if __GLASGOW_HASKELL__ >= 706
 {-# LANGUAGE PolyKinds #-}
 # endif
 

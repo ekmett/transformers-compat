@@ -11,14 +11,28 @@ module Data.Functor.Classes.Generic
     liftEqDefault
     -- * 'Ord1'
   , liftCompareDefault
+    -- * 'Read1'
+  , liftReadsPrecDefault
     -- * 'Show1'
   , liftShowsPrecDefault
   ) where
 
 import Data.Functor.Classes
-import GHC.Generics
+import GHC.Generics hiding (prec)
+import GHC.Read (list, paren, parens)
 import GHC.Show (appPrec, appPrec1, showSpace)
+import Text.ParserCombinators.ReadPrec
+import Text.Read (Read(..))
+import Text.Read.Lex (Lexeme(..))
 import Text.Show (showListWith)
+
+#if MIN_VERSION_base(4,7,0)
+import Data.Coerce (coerce)
+import GHC.Read (expectP)
+#else
+import GHC.Read (lexP)
+import Unsafe.Coerce (unsafeCoerce)
+#endif
 
 #if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid
@@ -149,6 +163,151 @@ primCompare eq le = if isTrue# eq then EQ
 #endif
 
 ---------------------------------------------------------------------------------------
+-- * Read1
+---------------------------------------------------------------------------------------
+
+liftReadsPrecDefault :: (GRead1 (Rep1 f), Generic1 f)
+                     => (Int -> ReadS a) -> ReadS [a] -> Int -> ReadS (f a)
+liftReadsPrecDefault rp rl p =
+  readPrec_to_S (fmap to1 $ parens $ gliftReadPrec (readS_to_Prec rp)
+                                                   (readS_to_Prec (const rl))) p
+
+#if !(MIN_VERSION_base(4,7,0))
+coerce :: a -> b
+coerce = unsafeCoerce
+
+expectP :: Lexeme -> ReadPrec ()
+expectP lexeme = do
+  thing <- lexP
+  if thing == lexeme then return () else pfail
+#endif
+
+coerceM1 :: ReadPrec (f p) -> ReadPrec (M1 i c f p)
+coerceM1 = coerce
+
+class GRead1 f where
+  gliftReadPrec :: ReadPrec a -> ReadPrec [a] -> ReadPrec (f a)
+
+instance GRead1 f => GRead1 (D1 d f) where
+  gliftReadPrec rp = coerceM1 . gliftReadPrec rp
+
+instance GRead1 V1 where
+  gliftReadPrec _ _ = pfail
+
+instance (GRead1 f, GRead1 g) => GRead1 (f :+: g) where
+  gliftReadPrec rp rl = fmap L1 (gliftReadPrec rp rl) +++ fmap R1 (gliftReadPrec rp rl)
+
+instance (Constructor c, GRead1Con f, IsNullary f) => GRead1 (C1 c f) where
+  gliftReadPrec rp rl = coerceM1 $ case fixity of
+      Prefix -> precIfNonNullary $ do
+                  if conIsTuple c
+                     then return ()
+                     else let cn = conName c
+                          in if isInfixTypeCon cn
+                                then readSurround '(' (expectP (Symbol cn)) ')'
+                                else expectP (Ident cn)
+                  readBraces t (gliftReadPrecCon t rp rl)
+      Infix _ m -> prec m $ gliftReadPrecCon t rp rl
+    where
+      c :: C1 c f p
+      c = undefined
+
+      x :: f p
+      x = undefined
+
+      fixity :: Fixity
+      fixity = conFixity c
+
+      precIfNonNullary :: ReadPrec a -> ReadPrec a
+      precIfNonNullary = if isNullary x
+                            then id
+                            else prec (if conIsRecord c
+                                          then appPrec1
+                                          else appPrec)
+
+      t :: ConType
+      t = if conIsRecord c
+          then Rec
+          else case conIsTuple c of
+              True  -> Tup
+              False -> case fixity of
+                  Prefix    -> Pref
+                  Infix _ _ -> Inf $ conName c
+
+readBraces :: ConType -> ReadPrec a -> ReadPrec a
+readBraces Rec     r = readSurround '{' r '}'
+readBraces Tup     r = paren r
+readBraces Pref    r = r
+readBraces (Inf _) r = r
+
+readSurround :: Char -> ReadPrec a -> Char -> ReadPrec a
+readSurround c1 r c2 = do
+  expectP (Punc [c1])
+  r' <- r
+  expectP (Punc [c2])
+  return r'
+
+class GRead1Con f where
+  gliftReadPrecCon :: ConType -> ReadPrec a -> ReadPrec [a] -> ReadPrec (f a)
+
+instance GRead1Con U1 where
+  gliftReadPrecCon _ _ _ = return U1
+
+instance GRead1Con Par1 where
+  gliftReadPrecCon _ rp _ = coercePar1 rp
+    where
+      coercePar1 :: ReadPrec p -> ReadPrec (Par1 p)
+      coercePar1 = coerce
+
+instance Read c => GRead1Con (K1 i c) where
+  gliftReadPrecCon _ _ _ = coerceK1 readPrec
+    where
+      coerceK1 :: ReadPrec c -> ReadPrec (K1 i c p)
+      coerceK1 = coerce
+
+instance Read1 f => GRead1Con (Rec1 f) where
+  gliftReadPrecCon _ rp rl = coerceRec1 $ readS_to_Prec $
+      liftReadsPrec (readPrec_to_S rp) (readPrec_to_S rl 0)
+    where
+      coerceRec1 :: ReadPrec (f a) -> ReadPrec (Rec1 f a)
+      coerceRec1 = coerce
+
+instance (Selector s, GRead1Con f) => GRead1Con (S1 s f) where
+  gliftReadPrecCon t rp rl
+    | selectorName == "" = coerceM1 $ step $ gliftReadPrecCon t rp rl
+    | otherwise          = coerceM1 $ do
+                              expectP (Ident selectorName)
+                              expectP (Punc "=")
+                              reset $ gliftReadPrecCon t rp rl
+    where
+      selectorName :: String
+      selectorName = selName (undefined :: S1 s f p)
+
+instance (GRead1Con f, GRead1Con g) => GRead1Con (f :*: g) where
+  gliftReadPrecCon t rp rl = do
+      l <- gliftReadPrecCon t rp rl
+      case t of
+           Rec   -> expectP (Punc "=")
+           Inf o -> infixPrec o
+           Tup   -> expectP (Punc ",")
+           Pref  -> return ()
+      r <- gliftReadPrecCon t rp rl
+      return (l :*: r)
+    where
+      infixPrec :: String -> ReadPrec ()
+      infixPrec o = if isInfixTypeCon o
+                       then expectP (Symbol o)
+                       else mapM_ expectP [Punc "`", Ident o, Punc "`"]
+
+instance (Read1 f, GRead1Con g) => GRead1Con (f :.: g) where
+  gliftReadPrecCon t rp rl = coerceComp1 $ readS_to_Prec $
+      liftReadsPrec (readPrec_to_S       (gliftReadPrecCon t rp rl))
+                    (readPrec_to_S (list (gliftReadPrecCon t rp rl)) 0)
+    where
+      coerceComp1 :: ReadPrec (f (g a)) -> ReadPrec ((f :.: g) a)
+      coerceComp1 = coerce
+
+---------------------------------------------------------------------------------------
 -- * Show1
 ---------------------------------------------------------------------------------------
 
@@ -161,6 +320,9 @@ class GShow1 f where
 
 instance GShow1 f => GShow1 (D1 d f) where
   gliftShowsPrec sp sl p (M1 x) = gliftShowsPrec sp sl p x
+
+instance GShow1 V1 where
+  gliftShowsPrec _ _ _ !_ = undefined
 
 instance (GShow1 f, GShow1 g) => GShow1 (f :+: g) where
   gliftShowsPrec sp sl p (L1 x) = gliftShowsPrec sp sl p x
@@ -184,9 +346,7 @@ instance (Constructor c, GShow1Con f, IsNullary f) => GShow1 (C1 c f) where
                  then id
                  else showChar ' ')
            . showBraces t (gliftShowsPrecCon t sp sl appPrec1 x)
-      Infix _ m -> showParen (p > m)
-                    . showBraces t
-                    $ gliftShowsPrecCon t sp sl (m+1) x
+      Infix _ m -> showParen (p > m) $ gliftShowsPrecCon t sp sl (m+1) x
     where
       fixity :: Fixity
       fixity = conFixity c
@@ -206,25 +366,9 @@ showBraces Tup     b = showChar '(' . b . showChar ')'
 showBraces Pref    b = b
 showBraces (Inf _) b = b
 
-conIsTuple :: Constructor c => C1 c f p -> Bool
-conIsTuple = isTupleString . conName
-
-isInfixTypeCon :: String -> Bool
-isInfixTypeCon (':':_) = True
-isInfixTypeCon _       = False
-
-isTupleString :: String -> Bool
-isTupleString ('(':',':_) = True
-isTupleString _           = False
-
 class GShow1Con f where
   gliftShowsPrecCon :: ConType -> (Int -> a -> ShowS) -> ([a] -> ShowS)
-                    -> Int -> f a   -> ShowS
-
-data ConType = Rec | Tup | Pref | Inf String
-
-instance GShow1Con V1 where
-  gliftShowsPrecCon _ _ _ _ !_ = undefined
+                    -> Int -> f a -> ShowS
 
 instance GShow1Con U1 where
   gliftShowsPrecCon _ _ _ _ U1 = id
@@ -305,6 +449,23 @@ twoHash  = id
 hashPrec = id
 # endif
 #endif
+
+---------------------------------------------------------------------------------------
+-- * Shared code between Read1 and Show1
+---------------------------------------------------------------------------------------
+
+data ConType = Rec | Tup | Pref | Inf String
+
+conIsTuple :: Constructor c => C1 c f p -> Bool
+conIsTuple = isTupleString . conName
+
+isTupleString :: String -> Bool
+isTupleString ('(':',':_) = True
+isTupleString _           = False
+
+isInfixTypeCon :: String -> Bool
+isInfixTypeCon (':':_) = True
+isInfixTypeCon _       = False
 
 class IsNullary f where
     -- Returns 'True' if the constructor has no fields.

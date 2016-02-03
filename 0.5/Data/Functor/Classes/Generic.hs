@@ -6,6 +6,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 module Data.Functor.Classes.Generic
   ( -- * 'Eq1'
     liftEqDefault
@@ -18,7 +19,11 @@ module Data.Functor.Classes.Generic
   ) where
 
 import Data.Functor.Classes
+#ifdef GENERIC_DERIVING
+import Generics.Deriving.Base hiding (prec)
+#else
 import GHC.Generics hiding (prec)
+#endif
 import GHC.Read (list, paren, parens)
 import GHC.Show (appPrec, appPrec1, showSpace)
 import Text.ParserCombinators.ReadPrec
@@ -38,7 +43,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Data.Monoid
 #endif
 
-#if MIN_VERSION_base(4,9,0)
+#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 import GHC.Exts
 #endif
 
@@ -78,7 +83,7 @@ instance GEq1 V1 where
 instance GEq1 Par1 where
   gliftEq f (Par1 a) (Par1 b) = f a b
 
-#if MIN_VERSION_base(4,9,0)
+#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 -- Unboxed types
 instance GEq1 UAddr where
   gliftEq _ (UAddr a1) (UAddr a2) = isTrue# (eqAddr# a1 a2)
@@ -136,7 +141,7 @@ instance GOrd1 V1 where
 instance GOrd1 Par1 where
   gliftCompare f (Par1 a) (Par1 b) = f a b
 
-#if MIN_VERSION_base(4,9,0)
+#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 -- Unboxed types
 instance GOrd1 UAddr where
   gliftCompare _ (UAddr a1) (UAddr a2) = primCompare (eqAddr# a1 a2) (leAddr# a1 a2)
@@ -156,7 +161,11 @@ instance GOrd1 UInt where
 instance GOrd1 UWord where
   gliftCompare _ (UWord w1) (UWord w2) = primCompare (eqWord# w1 w2) (leWord# w1 w2)
 
+# if __GLASGOW_HASKELL__ >= 708
 primCompare :: Int# -> Int# -> Ordering
+# else
+primCompare :: Bool -> Bool -> Ordering
+# endif
 primCompare eq le = if isTrue# eq then EQ
                     else if isTrue# le then LT
                     else GT
@@ -421,7 +430,7 @@ instance (Show1 f, GShow1Con g) => GShow1Con (f :.: g) where
                   (showListWith (gliftShowsPrecCon t sp sl 0))
                   p x
 
-#if MIN_VERSION_base(4,9,0)
+#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 instance GShow1Con UChar where
   gliftShowsPrecCon _ _ _ p (UChar c)   = showsPrec (hashPrec p) (C# c) . oneHash
 
@@ -451,7 +460,7 @@ hashPrec = id
 #endif
 
 ---------------------------------------------------------------------------------------
--- * Shared code between Read1 and Show1
+-- * Shared code
 ---------------------------------------------------------------------------------------
 
 data ConType = Rec | Tup | Pref | Inf String
@@ -492,7 +501,7 @@ instance IsNullary (f :*: g) where
 instance IsNullary (f :.: g) where
     isNullary _ = False
 
-#if MIN_VERSION_base(4,9,0)
+#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 instance IsNullary UChar where
     isNullary _ = False
 
@@ -507,4 +516,9 @@ instance IsNullary UInt where
 
 instance IsNullary UWord where
     isNullary _ = False
+
+# if __GLASGOW_HASKELL__ < 708
+isTrue# :: Bool -> Bool
+isTrue# = id
+# endif
 #endif

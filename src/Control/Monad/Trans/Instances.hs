@@ -10,7 +10,6 @@
 {-# LANGUAGE TypeOperators #-}
 
 # if __GLASGOW_HASKELL__ >= 702
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE Trustworthy #-}
 # endif
 
@@ -93,7 +92,9 @@ import           Data.Bifunctor (Bifunctor(..))
 import           Data.Data (Data)
 import           Data.Typeable
 
-# if __GLASGOW_HASKELL__ >= 702
+# ifdef GENERIC_DERIVING
+import           Generics.Deriving.Base
+# elif __GLASGOW_HASKELL__ >= 702
 import           GHC.Generics
 # endif
 #endif
@@ -276,7 +277,7 @@ deriving instance Typeable Product
 deriving instance Typeable1 Identity
 deriving instance Data a => Data (Identity a)
 
-#   if __GLASGOW_HASKELL__ >= 702
+#   if __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
 instance Generic (Identity a) where
     type Rep (Identity a) = D1 MDIdentity (C1 MCIdentity (S1 MSIdentity (Rec0 a)))
     from (Identity x) = M1 (M1 (M1 (K1 x)))
@@ -312,7 +313,7 @@ deriving instance Typeable 'Identity
 #  endif
 
 #  if !(MIN_VERSION_base(4,9,0))
-#   if __GLASGOW_HASKELL__ >= 702
+#   if __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
 -- Generic(1) instances for Compose
 instance Generic (Compose f g a) where
     type Rep (Compose f g a) =

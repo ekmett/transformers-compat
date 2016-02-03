@@ -1,13 +1,16 @@
 {-# LANGUAGE CPP #-}
 
 #ifndef HASKELL98
-# if __GLASGOW_HASKELL__ >= 702
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE EmptyDataDecls #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
+# if __GLASGOW_HASKELL__ >= 702
+{-# LANGUAGE Trustworthy #-}
 # endif
 # if __GLASGOW_HASKELL__ >= 706
 {-# LANGUAGE PolyKinds #-}
@@ -15,9 +18,6 @@
 # if __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE AutoDeriveTypeable #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE KindSignatures #-}
 # endif
 #endif
 -- |
@@ -42,7 +42,9 @@ import Data.Monoid (mappend)
 import Data.Traversable (Traversable(traverse))
 
 #ifndef HASKELL98
-# if __GLASGOW_HASKELL__ >= 702
+# ifdef GENERIC_DERIVING
+import Generics.Deriving.Base
+# elif __GLASGOW_HASKELL__ >= 702
 import GHC.Generics
 # endif
 # if __GLASGOW_HASKELL__ >= 708
@@ -54,8 +56,15 @@ import Data.Data
 data Sum f g a = InL (f a) | InR (g a)
 
 #ifndef HASKELL98
-# if __GLASGOW_HASKELL__ >= 702
-deriving instance Generic (Sum f g a)
+# if __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
+instance Generic (Sum f g a) where
+    type Rep (Sum f g a) =
+      D1 MDSum (C1 MCInL (S1 NoSelector (Rec0 (f a)))
+            :+: C1 MCInR (S1 NoSelector (Rec0 (g a))))
+    from (InL f) = M1 (L1 (M1 (M1 (K1 f))))
+    from (InR g) = M1 (R1 (M1 (M1 (K1 g))))
+    to (M1 (L1 (M1 (M1 (K1 f))))) = InL f
+    to (M1 (R1 (M1 (M1 (K1 g))))) = InR g
 
 instance Generic1 (Sum f g) where
     type Rep1 (Sum f g) =

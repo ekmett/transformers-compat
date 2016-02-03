@@ -107,6 +107,6 @@ library
       Data.Functor.Classes
       Data.Functor.Sum
 
-  if !flag(four)
+  if !flag(four) && impl(ghc >= 7.2)
     exposed-modules:
       Data.Functor.Classes.Generic

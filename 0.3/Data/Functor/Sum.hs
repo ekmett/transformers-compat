@@ -57,6 +57,7 @@ data Sum f g a = InL (f a) | InR (g a)
 
 #ifndef HASKELL98
 # if __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
+-- Generic(1) instances for Sum
 instance Generic (Sum f g a) where
     type Rep (Sum f g a) =
       D1 MDSum (C1 MCInL (S1 NoSelector (Rec0 (f a)))

@@ -8,7 +8,7 @@
 #define MIN_VERSION_mtl(x,y,z) 1
 #endif
 
-#ifndef HASKELL98
+#ifdef MTL
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -70,7 +70,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Zip (MonadZip(mzipWith))
 #endif
 
-#ifndef HASKELL98
+#ifdef MTL
 import Control.Monad.Writer.Class
 import Control.Monad.State.Class
 import Control.Monad.Reader.Class
@@ -278,7 +278,7 @@ liftPass pass = mapExceptT $ \ m -> pass $ do
 
 -- incurring the mtl dependency for these avoids packages that need them introducing orphans.
 
-#ifndef HASKELL98
+#ifdef MTL
 
 instance Monad m => MonadError e (ExceptT e m) where
     throwError = throwE

@@ -64,229 +64,58 @@ matrix:
     - env: CABALVER=1.18 GHCVER=7.2.2
       compiler: ": #GHC 7.2.2"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-f-generic-deriving
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-f-mtl
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-f-mtl -f-generic-deriving
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-ftwo
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-ftwo -f-generic-deriving
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-ftwo -f-mtl
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-ftwo -f-generic-deriving -f-mtl
       compiler: ": #GHC 7.2.2"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-fthree
       compiler: ": #GHC 7.2.2"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-fthree -f-generic-deriving
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-fthree -f-mtl
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-fthree -f-generic-deriving -f-mtl
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-ffour
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-ffour -f-generic-deriving
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-ffour -f-mtl
-      compiler: ": #GHC 7.2.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.2.2 OPTS=-ffour -f-generic-deriving -f-mtl
       compiler: ": #GHC 7.2.2"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.2.2,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.4.2
       compiler: ": #GHC 7.4.2"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-f-generic-deriving
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-f-mtl
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-f-mtl -f-generic-deriving
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-ftwo
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-ftwo -f-generic-deriving
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-ftwo -f-mtl
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-ftwo -f-generic-deriving -f-mtl
       compiler: ": #GHC 7.4.2"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-fthree
       compiler: ": #GHC 7.4.2"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-fthree -f-generic-deriving
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-fthree -f-mtl
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-fthree -f-generic-deriving -f-mtl
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-ffour
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-ffour -f-generic-deriving
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-ffour -f-mtl
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.4.2 OPTS=-ffour -f-generic-deriving -f-mtl
       compiler: ": #GHC 7.4.2"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.4.2,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.6.3
       compiler: ": #GHC 7.6.3"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-f-generic-deriving
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-f-mtl
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-f-mtl -f-generic-deriving
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-ftwo
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-ftwo -f-generic-deriving
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-ftwo -f-mtl
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-ftwo -f-generic-deriving -f-mtl
       compiler: ": #GHC 7.6.3"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-fthree
       compiler: ": #GHC 7.6.3"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-fthree -f-generic-deriving
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-fthree -f-mtl
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-fthree -f-generic-deriving -f-mtl
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-ffour
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-ffour -f-generic-deriving
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-ffour -f-mtl
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.6.3 OPTS=-ffour -f-generic-deriving -f-mtl
       compiler: ": #GHC 7.6.3"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.6.3,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.8.4
       compiler: ": #GHC 7.8.4"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-f-generic-deriving
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-f-mtl
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-f-mtl -f-generic-deriving
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-ftwo
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-ftwo -f-generic-deriving
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-ftwo -f-mtl
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-ftwo -f-generic-deriving -f-mtl
       compiler: ": #GHC 7.8.4"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-fthree
       compiler: ": #GHC 7.8.4"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-fthree -f-generic-deriving
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-fthree -f-mtl
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-fthree -f-generic-deriving -f-mtl
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-ffour
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-ffour -f-generic-deriving
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-ffour -f-mtl
-      compiler: ": #GHC 7.8.4"
-      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.18 GHCVER=7.8.4 OPTS=-ffour -f-generic-deriving -f-mtl
       compiler: ": #GHC 7.8.4"
       addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.22 GHCVER=7.10.3
       compiler: ": #GHC 7.10.3"
       addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.3 -f-generic-deriving
-      compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.3 -f-mtl
-      compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.3 -f-generic-deriving -f-mtl
-      compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.22 GHCVER=7.10.3 -ffour
       compiler: ": #GHC 7.10.3"
       addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.3 -ffour -f-generic-deriving
-      compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.3 -ffour -f-mtl
-      compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.3 -ffour -f-generic-deriving -f-mtl
-      compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.24 GHCVER=8.0.1
-      compiler: ": #GHC 8.0.1"
-      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.24 GHCVER=8.0.1 OPTS=-f-generic-deriving
-      compiler: ": #GHC 8.0.1"
-      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.24 GHCVER=8.0.1 OPTS=-f-mtl
-      compiler: ": #GHC 8.0.1"
-      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hlint], sources: [hvr-ghc]}}
-    - env: CABALVER=1.24 GHCVER=8.0.1 OPTS=-f-generic-deriving -f-mtl
       compiler: ": #GHC 8.0.1"
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hlint], sources: [hvr-ghc]}}
     - env: CABALVER=1.24 GHCVER=head

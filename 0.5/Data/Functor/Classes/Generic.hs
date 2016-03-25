@@ -63,9 +63,8 @@ import GHC.Exts
 -- "Data.Functor.Classes.Generic" should behave.
 newtype Options = Options
   { ghc8ShowBehavior :: Bool
-    -- ^ If 'True', a default 'Show1' implementation will always omit
-    --   parentheses around a record constructor, regardless of precedence.
-    --   It will also show hash signs (@#@) when showing unlifted types.
+    -- ^ If 'True', a default 'Show1' implementation will show hash signs
+    -- (@#@) when showing unlifted types.
   }
 
 -- | Options that match the behavior of the installed version of GHC.
@@ -408,10 +407,7 @@ instance (GShow1 f, GShow1 g) => GShow1 (f :+: g) where
 instance (Constructor c, GShow1Con f, IsNullary f) => GShow1 (C1 c f) where
   gliftShowsPrec opts sp sl p c@(M1 x) = case fixity of
       Prefix -> showParen ( p > appPrec
-                             && not ( isNullary x
-                                      || conIsTuple c
-                                      || (conIsRecord c && ghc8ShowBehavior opts)
-                                    )
+                             && not (isNullary x || conIsTuple c)
                            ) $
              (if conIsTuple c
                  then id

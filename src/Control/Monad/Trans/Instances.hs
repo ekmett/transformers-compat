@@ -10,7 +10,6 @@
 {-# LANGUAGE TypeOperators #-}
 
 # if __GLASGOW_HASKELL__ >= 702
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE Trustworthy #-}
 # endif
 
@@ -69,7 +68,7 @@ import           Data.Functor.Constant (Constant(..))
 import           Data.Functor.Identity (Identity(..))
 import           Data.Functor.Product (Product(..))
 import           Data.Functor.Reverse (Reverse(..))
-import           Data.Functor.Sum ()
+import           Data.Functor.Sum (Sum(..))
 
 import           Control.Applicative
 import           Control.Monad (MonadPlus(..))
@@ -93,7 +92,9 @@ import           Data.Bifunctor (Bifunctor(..))
 import           Data.Data (Data)
 import           Data.Typeable
 
-# if __GLASGOW_HASKELL__ >= 702
+# ifdef GENERIC_DERIVING
+import           Generics.Deriving.Base
+# elif __GLASGOW_HASKELL__ >= 702
 import           GHC.Generics
 # endif
 #endif
@@ -275,113 +276,27 @@ deriving instance Typeable Product
 #  if !(MIN_VERSION_base(4,8,0))
 deriving instance Typeable1 Identity
 deriving instance Data a => Data (Identity a)
-
-#   if __GLASGOW_HASKELL__ >= 702
-instance Generic (Identity a) where
-    type Rep (Identity a) = D1 MDIdentity (C1 MCIdentity (S1 MSIdentity (Rec0 a)))
-    from (Identity x) = M1 (M1 (M1 (K1 x)))
-    to (M1 (M1 (M1 (K1 x)))) = Identity x
-
-instance Generic1 Identity where
-    type Rep1 Identity = D1 MDIdentity (C1 MCIdentity (S1 MSIdentity Par1))
-    from1 (Identity x) = M1 (M1 (M1 (Par1 x)))
-    to1 (M1 (M1 (M1 x))) = Identity (unPar1 x)
-
-data MDIdentity
-data MCIdentity
-data MSIdentity
-
-instance Datatype MDIdentity where
-  datatypeName _ = "Identity"
-  moduleName _ = "Data.Functor.Identity"
-#    if __GLASGOW_HASKELL__ >= 708
-  isNewtype _ = True
-#    endif
-
-instance Constructor MCIdentity where
-  conName _ = "Identity"
-  conIsRecord _ = True
-
-instance Selector MSIdentity where
-  selName _ = "runIdentity"
-#   endif
-
 #   if __GLASGOW_HASKELL__ >= 708
 deriving instance Typeable 'Identity
 #   endif
 #  endif
 
 #  if !(MIN_VERSION_base(4,9,0))
-#   if __GLASGOW_HASKELL__ >= 702
--- Generic(1) instances for Compose
-instance Generic (Compose f g a) where
-    type Rep (Compose f g a) =
-      D1 MDCompose
-        (C1 MCCompose
-          (S1 MSCompose (Rec0 (f (g a)))))
-    from (Compose x) = M1 (M1 (M1 (K1 x)))
-    to (M1 (M1 (M1 (K1 x)))) = Compose x
-
-instance Functor f => Generic1 (Compose f g) where
-    type Rep1 (Compose f g) =
-      D1 MDCompose
-        (C1 MCCompose
-          (S1 MSCompose (f :.: Rec1 g)))
-    from1 (Compose x) = M1 (M1 (M1 (Comp1 (fmap Rec1 x))))
-    to1 (M1 (M1 (M1 x))) = Compose (fmap unRec1 (unComp1 x))
-
-data MDCompose
-data MCCompose
-data MSCompose
-
-instance Datatype MDCompose where
-    datatypeName _ = "Compose"
-    moduleName   _ = "Data.Functor.Compose"
-#    if __GLASGOW_HASKELL__ >= 708
-    isNewtype    _ = True
-#    endif
-
-instance Constructor MCCompose where
-    conName     _ = "Compose"
-    conIsRecord _ = True
-
-instance Selector MSCompose where
-    selName _ = "getCompose"
-
--- Generic(1) instances for Product
-instance Generic (Product f g a) where
-    type Rep (Product f g a) =
-      D1 MDProduct
-        (C1 MCPair
-          (S1 NoSelector (Rec0 (f a)) :*: S1 NoSelector (Rec0 (g a))))
-    from (Pair f g) = M1 (M1 (M1 (K1 f) :*: M1 (K1 g)))
-    to (M1 (M1 (M1 (K1 f) :*: M1 (K1 g)))) = Pair f g
-
-instance Generic1 (Product f g) where
-    type Rep1 (Product f g) =
-      D1 MDProduct
-        (C1 MCPair
-          (S1 NoSelector (Rec1 f) :*: S1 NoSelector (Rec1 g)))
-    from1 (Pair f g) = M1 (M1 (M1 (Rec1 f) :*: M1 (Rec1 g)))
-    to1 (M1 (M1 (M1 f :*: M1 g))) = Pair (unRec1 f) (unRec1 g)
-
-data MDProduct
-data MCPair
-
-instance Datatype MDProduct where
-    datatypeName _ = "Product"
-    moduleName   _ = "Data.Functor.Product"
-
-instance Constructor MCPair where
-    conName _ = "Pair"
-#   endif
-
 #   if __GLASGOW_HASKELL__ >= 708
 -- Data instances for Compose and Product
 deriving instance (Data (f (g a)), Typeable f, Typeable g, Typeable a)
                => Data (Compose (f :: * -> *) (g :: * -> *) (a :: *))
 deriving instance (Data (f a), Data (g a), Typeable f, Typeable g, Typeable a)
                => Data (Product (f :: * -> *) (g :: * -> *) (a :: *))
+
+#    if MIN_VERSION_transformers(0,4,0)
+-- Typeable/Data instances for Sum
+-- These are also present in Data.Functor.Sum in transformers-compat, but only
+-- these are reachable if using @transformers-0.4.0.0@
+deriving instance Typeable Sum
+deriving instance (Data (f a), Data (g a), Typeable f, Typeable g, Typeable a)
+               => Data (Sum (f :: * -> *) (g :: * -> *) (a :: *))
+#    endif
 #   endif
 #  endif
 # endif
@@ -419,5 +334,144 @@ instance (Storable a) => Storable (Identity a) where
     pokeByteOff p i (Identity x) = pokeByteOff p i x
     peek p                       = fmap runIdentity (peek (castPtr p))
     poke p (Identity x)          = poke (castPtr p) x
+# endif
+#endif
+
+-- Generic(1) instances
+#ifndef HASKELL98
+# if (!(MIN_VERSION_transformers(0,5,0)) && (__GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING))) \
+    || (MIN_VERSION_transformers(0,5,0)  &&  __GLASGOW_HASKELL__ < 702  && defined(GENERIC_DERIVING))
+
+#  if !(MIN_VERSION_base(4,8,0))
+instance Generic (Identity a) where
+    type Rep (Identity a) = D1 MDIdentity (C1 MCIdentity (S1 MSIdentity (Rec0 a)))
+    from (Identity x) = M1 (M1 (M1 (K1 x)))
+    to (M1 (M1 (M1 (K1 x)))) = Identity x
+
+instance Generic1 Identity where
+    type Rep1 Identity = D1 MDIdentity (C1 MCIdentity (S1 MSIdentity Par1))
+    from1 (Identity x) = M1 (M1 (M1 (Par1 x)))
+    to1 (M1 (M1 (M1 x))) = Identity (unPar1 x)
+
+data MDIdentity
+data MCIdentity
+data MSIdentity
+
+instance Datatype MDIdentity where
+  datatypeName _ = "Identity"
+  moduleName _ = "Data.Functor.Identity"
+#   if __GLASGOW_HASKELL__ >= 708
+  isNewtype _ = True
+#   endif
+
+instance Constructor MCIdentity where
+  conName _ = "Identity"
+  conIsRecord _ = True
+
+instance Selector MSIdentity where
+  selName _ = "runIdentity"
+#  endif
+
+#  if !(MIN_VERSION_base(4,9,0))
+-- Generic(1) instances for Compose
+instance Generic (Compose f g a) where
+    type Rep (Compose f g a) =
+      D1 MDCompose
+        (C1 MCCompose
+          (S1 MSCompose (Rec0 (f (g a)))))
+    from (Compose x) = M1 (M1 (M1 (K1 x)))
+    to (M1 (M1 (M1 (K1 x)))) = Compose x
+
+instance Functor f => Generic1 (Compose f g) where
+    type Rep1 (Compose f g) =
+      D1 MDCompose
+        (C1 MCCompose
+          (S1 MSCompose (f :.: Rec1 g)))
+    from1 (Compose x) = M1 (M1 (M1 (Comp1 (fmap Rec1 x))))
+    to1 (M1 (M1 (M1 x))) = Compose (fmap unRec1 (unComp1 x))
+
+data MDCompose
+data MCCompose
+data MSCompose
+
+instance Datatype MDCompose where
+    datatypeName _ = "Compose"
+    moduleName   _ = "Data.Functor.Compose"
+#   if __GLASGOW_HASKELL__ >= 708
+    isNewtype    _ = True
+#   endif
+
+instance Constructor MCCompose where
+    conName     _ = "Compose"
+    conIsRecord _ = True
+
+instance Selector MSCompose where
+    selName _ = "getCompose"
+
+-- Generic(1) instances for Product
+instance Generic (Product f g a) where
+    type Rep (Product f g a) =
+      D1 MDProduct
+        (C1 MCPair
+          (S1 NoSelector (Rec0 (f a)) :*: S1 NoSelector (Rec0 (g a))))
+    from (Pair f g) = M1 (M1 (M1 (K1 f) :*: M1 (K1 g)))
+    to (M1 (M1 (M1 (K1 f) :*: M1 (K1 g)))) = Pair f g
+
+instance Generic1 (Product f g) where
+    type Rep1 (Product f g) =
+      D1 MDProduct
+        (C1 MCPair
+          (S1 NoSelector (Rec1 f) :*: S1 NoSelector (Rec1 g)))
+    from1 (Pair f g) = M1 (M1 (M1 (Rec1 f) :*: M1 (Rec1 g)))
+    to1 (M1 (M1 (M1 f :*: M1 g))) = Pair (unRec1 f) (unRec1 g)
+
+data MDProduct
+data MCPair
+
+instance Datatype MDProduct where
+    datatypeName _ = "Product"
+    moduleName   _ = "Data.Functor.Product"
+
+instance Constructor MCPair where
+    conName _ = "Pair"
+
+#   if MIN_VERSION_transformers(0,4,0)
+-- Generic(1) instances for Sum
+-- These are also present in Data.Functor.Sum in transformers-compat, but only
+-- these are reachable if using @transformers-0.4.0.0@ or later
+instance Generic (Sum f g a) where
+    type Rep (Sum f g a) =
+      D1 MDSum (C1 MCInL (S1 NoSelector (Rec0 (f a)))
+            :+: C1 MCInR (S1 NoSelector (Rec0 (g a))))
+    from (InL f) = M1 (L1 (M1 (M1 (K1 f))))
+    from (InR g) = M1 (R1 (M1 (M1 (K1 g))))
+    to (M1 (L1 (M1 (M1 (K1 f))))) = InL f
+    to (M1 (R1 (M1 (M1 (K1 g))))) = InR g
+
+instance Generic1 (Sum f g) where
+    type Rep1 (Sum f g) =
+      D1 MDSum (C1 MCInL (S1 NoSelector (Rec1 f))
+            :+: C1 MCInR (S1 NoSelector (Rec1 g)))
+    from1 (InL f) = M1 (L1 (M1 (M1 (Rec1 f))))
+    from1 (InR g) = M1 (R1 (M1 (M1 (Rec1 g))))
+    to1 (M1 (L1 (M1 (M1 f)))) = InL (unRec1 f)
+    to1 (M1 (R1 (M1 (M1 g)))) = InR (unRec1 g)
+
+data MDSum
+data MCInL
+data MCInR
+
+instance Datatype MDSum where
+    datatypeName _ = "Sum"
+    moduleName   _ = "Data.Functor.Sum"
+
+instance Constructor MCInL where
+    conName _ = "InL"
+
+instance Constructor MCInR where
+    conName _ = "InR"
+#   endif
+#  endif
+
 # endif
 #endif

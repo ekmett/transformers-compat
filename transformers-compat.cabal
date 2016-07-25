@@ -23,7 +23,13 @@ description:
   Note: missing methods are not supplied, but this at least permits the types to be used.
 
 build-type:    Simple
-tested-with:   GHC == 7.0.4, GHC == 7.4.1, GHC == 7.4.2, GHC == 7.6.1, GHC == 7.8.2, GHC == 7.10.3, GHC == 8.0.1
+tested-with:   GHC == 7.0.4
+             , GHC == 7.2.2
+             , GHC == 7.4.2
+             , GHC == 7.6.3
+             , GHC == 7.8.4
+             , GHC == 7.10.3
+             , GHC == 8.0.1
 extra-source-files:
   .travis.yml
   .ghci
@@ -58,6 +64,15 @@ flag mtl
   manual: True
   description: -f-mtl Disables support for mtl for transformers 0.2 and 0.3. That is an unsupported configuration, and results in missing instances for `ExceptT`.
 
+flag generic-deriving
+  default: True
+  manual: True
+  description: -f-generic-deriving prevents generic-deriving from being built as a dependency.
+               This disables certain aspects of generics for older versions of GHC. In particular,
+               Generic(1) instances will not be backported prior to GHC 7.2, and generic operations
+               over unlifted types will not be backported prior to GHC 8.0. This is an unsupported
+               configuration.
+
 library
   build-depends:
     base >= 4.3 && < 5
@@ -89,7 +104,15 @@ library
       else
         build-depends: transformers >= 0.5 && < 0.6
 
-  if !flag(mtl)
+  if flag(mtl)
+    cpp-options: -DMTL
+
+  if flag(generic-deriving)
+    if impl(ghc < 8.0) && flag(generic-deriving)
+      cpp-options: -DGENERIC_DERIVING
+      build-depends: generic-deriving >= 1.10 && < 2
+
+  if !flag(mtl) && !flag(generic-deriving)
     cpp-options: -DHASKELL98
   else
     build-depends: ghc-prim
@@ -107,6 +130,6 @@ library
       Data.Functor.Classes
       Data.Functor.Sum
 
-  if !flag(four) && impl(ghc >= 7.2)
+  if !flag(four) && (impl(ghc >= 7.2) || flag(generic-deriving))
     exposed-modules:
       Data.Functor.Classes.Generic

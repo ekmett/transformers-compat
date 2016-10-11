@@ -1,3 +1,52 @@
+next
+----
+* Introduce the `Data.Functor.Classes.Generic` module, which provides functions that can generically implement methods in the `Eq1`, `Ord1`, `Read1`, and `Show1` classes (without the usual boilerplate involved).
+* Introduce the `generic-deriving` flag. When enabled, `transformers-compat` will depend on the `generic-deriving` library on older versions of GHC to backport `GHC.Generics` support for `Generic` instances and the machinery in `Data.Functor.Classes.Generic`.
+* Some instances were present in `Data.Functor.Sum` but not in `Control.Monad.Trans.Instances` (e.g., the `Generic`, `Typeable`, and `Data` instances for `Sum`). This has been fixed.
+* Backport changes from `transformers-0.5.1` (i.e., add `Bounded`, `Enum`, `Ix`, and `Storable` instances for `Identity`)
+
+0.5.1.4
+-------
+* Each of versions 0.5.1.2–0.5.1.4 is a 0.5.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.5.1 release notes describe the changes in this version.
+  This release is configured with neither `-ftwo` nor `-fthree` (which works with `transformers-0.4` and above).
+
+0.5.1.3
+-------
+* Each of versions 0.5.1.2–0.5.1.4 is a 0.5.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.5.1 release notes describe the changes in this version.
+  This release is configured with `-fthree` (which works with the `transformers-0.3` series).
+
+0.5.1.2
+-------
+* Each of versions 0.5.1.2–0.5.1.4 is a 0.5.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.5.1 release notes describe the changes in this version.
+  This release is configured with `-ftwo` (which works with the `transformers-0.2` series).
+
+0.5.1
+-----
+* Fix a bug in which `PolyKinds` was enabled on GHC 7.4, resulting in interface file bugs on that version of GHC.
+
+0.5.0.4
+-------
+* Each of versions 0.5.0.2–0.5.0.4 is a 0.5 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.5 release notes describe the changes in this version.
+  This release is configured with neither `-ftwo` nor `-fthree` (which works with `transformers-0.4` and above).
+
+0.5.0.3
+-------
+* Each of versions 0.5.0.2–0.5.0.4 is a 0.5 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.5 release notes describe the changes in this version.
+  This release is configured with `-fthree` (which works with the `transformers-0.3` series).
+
+0.5.0.2
+-------
+* Each of versions 0.5.0.2–0.5.0.4 is a 0.5 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.5 release notes describe the changes in this version.
+  This release is configured with `-ftwo` (which works with the `transformers-0.2` series).
+
+0.5
+---
+* Update `transformers-compat` to incorporate changes from the `transformers-0.5` series. These changes include:
+  * The `Data.Functor.Classes` module was completely redesigned.
+  * Modules now have `Safe` or `Trustworthy` annotations.
+  * Data types and type synonyms are poly-kinded when possible.
+* Add `Control.Monad.Trans.Instances`, a module of orphan instances that mimic instances available in later versions of `transformers`.
+
 0.4.0.4
 -------
 * Each of versions 0.4.0.2–0.4.0.4 is a 0.4 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.4 release notes describe the changes in this version.

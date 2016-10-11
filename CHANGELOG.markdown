@@ -1,12 +1,17 @@
 0.4.0.4
 -------
+* Each of versions 0.4.0.2–0.4.0.4 is a 0.4 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.4 release notes describe the changes in this version.
+  This release is configured with neither `-ftwo` nor `-fthree` (which works with `transformers-0.4` and above).
 
 0.4.0.3
 -------
+* Each of versions 0.4.0.2–0.4.0.4 is a 0.4 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.4 release notes describe the changes in this version.
+  This release is configured with `-fthree` (which works with the `transformers-0.3` series).
 
 0.4.0.2
 -------
-* Each of these is a build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker.
+* Each of versions 0.4.0.2–0.4.0.4 is a 0.4 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.4 release notes describe the changes in this version.
+  This release is configured with `-ftwo` (which works with the `transformers-0.2` series).
 
 0.4
 ---
@@ -19,14 +24,21 @@
 
 0.3.3.4
 -------
+* Versions 0.3.3.2–0.3.3.4 were a successful attempt to fix build problems caused by the cabal backtracker.
+* Each of these is a build with a different set of flags configured.
+  This release is configured with neither `-ftwo` nor `-fthree` (which works with `transformers-0.4` and above).
 
 0.3.3.3
 -------
+* Versions 0.3.3.2–0.3.3.4 were a successful attempt to fix build problems caused by the cabal backtracker.
+* Each of these is a build with a different set of flags configured.
+  This release is configured with `-fthree` (which works with the `transformers-0.3` series).
 
 0.3.3.2
 -------
-* These releases were a successful attempt to fix build problems caused by the cabal backtracker.
+* Versions 0.3.3.2–0.3.3.4 were a successful attempt to fix build problems caused by the cabal backtracker.
 * Each of these is a build with a different set of flags configured.
+  This release is configured with `-ftwo` (which works with the `transformers-0.2` series).
 
 0.3.2
 -----

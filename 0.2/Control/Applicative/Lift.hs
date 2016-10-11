@@ -49,12 +49,14 @@ instance (Eq1 f) => Eq1 (Lift f) where
     liftEq _ (Pure _) (Other _) = False
     liftEq _ (Other _) (Pure _) = False
     liftEq eq (Other y1) (Other y2) = liftEq eq y1 y2
+    {-# INLINE liftEq #-}
 
 instance (Ord1 f) => Ord1 (Lift f) where
     liftCompare comp (Pure x1) (Pure x2) = comp x1 x2
     liftCompare _ (Pure _) (Other _) = LT
     liftCompare _ (Other _) (Pure _) = GT
     liftCompare comp (Other y1) (Other y2) = liftCompare comp y1 y2
+    {-# INLINE liftCompare #-}
 
 instance (Read1 f) => Read1 (Lift f) where
     liftReadsPrec rp rl = readsData $
@@ -74,39 +76,48 @@ instance (Show1 f, Show a) => Show (Lift f a) where showsPrec = showsPrec1
 instance (Functor f) => Functor (Lift f) where
     fmap f (Pure x) = Pure (f x)
     fmap f (Other y) = Other (fmap f y)
+    {-# INLINE fmap #-}
 
 instance (Foldable f) => Foldable (Lift f) where
     foldMap f (Pure x) = f x
     foldMap f (Other y) = foldMap f y
+    {-# INLINE foldMap #-}
 
 instance (Traversable f) => Traversable (Lift f) where
     traverse f (Pure x) = Pure <$> f x
     traverse f (Other y) = Other <$> traverse f y
+    {-# INLINE traverse #-}
 
 -- | A combination is 'Pure' only if both parts are.
 instance (Applicative f) => Applicative (Lift f) where
     pure = Pure
+    {-# INLINE pure #-}
     Pure f <*> Pure x = Pure (f x)
     Pure f <*> Other y = Other (f <$> y)
     Other f <*> Pure x = Other (($ x) <$> f)
     Other f <*> Other y = Other (f <*> y)
+    {-# INLINE (<*>) #-}
 
 -- | A combination is 'Pure' only either part is.
 instance (Alternative f) => Alternative (Lift f) where
     empty = Other empty
+    {-# INLINE empty #-}
     Pure x <|> _ = Pure x
     Other _ <|> Pure y = Pure y
     Other x <|> Other y = Other (x <|> y)
+    {-# INLINE (<|>) #-}
 
 -- | Projection to the other functor.
 unLift :: (Applicative f) => Lift f a -> f a
 unLift (Pure x) = pure x
 unLift (Other e) = e
+{-# INLINE unLift #-}
 
 -- | Apply a transformation to the other computation.
 mapLift :: (f a -> g a) -> Lift f a -> Lift g a
 mapLift _ (Pure x) = Pure x
 mapLift f (Other e) = Other (f e)
+{-# INLINE mapLift #-}
 
 -- | An applicative functor that collects a monoid (e.g. lists) of errors.
 -- A sequence of computations fails if any of its components do, but
@@ -132,7 +143,9 @@ type Errors e = Lift (Constant e)
 runErrors :: Errors e a -> Either e a
 runErrors (Other (Constant e)) = Left e
 runErrors (Pure x) = Right x
+{-# INLINE runErrors #-}
 
 -- | Report an error.
 failure :: e -> Errors e a
 failure e = Other (Constant e)
+{-# INLINE failure #-}

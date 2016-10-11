@@ -3,6 +3,7 @@ next
 * Introduce the `Data.Functor.Classes.Generic` module, which provides functions that can generically implement methods in the `Eq1`, `Ord1`, `Read1`, and `Show1` classes (without the usual boilerplate involved).
 * Introduce the `generic-deriving` flag. When enabled, `transformers-compat` will depend on the `generic-deriving` library on older versions of GHC to backport `GHC.Generics` support for `Generic` instances and the machinery in `Data.Functor.Classes.Generic`.
 * Some instances were present in `Data.Functor.Sum` but not in `Control.Monad.Trans.Instances` (e.g., the `Generic`, `Typeable`, and `Data` instances for `Sum`). This has been fixed.
+* Backport changes from `transformers-0.5.2` (i.e., add more `INLINE` annotations)
 * Backport changes from `transformers-0.5.1` (i.e., add `Bounded`, `Enum`, `Ix`, and `Storable` instances for `Identity`)
 
 0.5.1.4

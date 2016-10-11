@@ -37,9 +37,11 @@ newtype Backwards f a = Backwards { forwards :: f a }
 
 instance (Eq1 f) => Eq1 (Backwards f) where
     liftEq eq (Backwards x) (Backwards y) = liftEq eq x y
+    {-# INLINE liftEq #-}
 
 instance (Ord1 f) => Ord1 (Backwards f) where
     liftCompare comp (Backwards x) (Backwards y) = liftCompare comp x y
+    {-# INLINE liftCompare #-}
 
 instance (Read1 f) => Read1 (Backwards f) where
     liftReadsPrec rp rl = readsData $
@@ -57,26 +59,38 @@ instance (Show1 f, Show a) => Show (Backwards f a) where showsPrec = showsPrec1
 -- | Derived instance.
 instance (Functor f) => Functor (Backwards f) where
     fmap f (Backwards a) = Backwards (fmap f a)
+    {-# INLINE fmap #-}
 
 -- | Apply @f@-actions in the reverse order.
 instance (Applicative f) => Applicative (Backwards f) where
     pure a = Backwards (pure a)
+    {-# INLINE pure #-}
     Backwards f <*> Backwards a = Backwards (a <**> f)
+    {-# INLINE (<*>) #-}
 
 -- | Try alternatives in the same order as @f@.
 instance (Alternative f) => Alternative (Backwards f) where
     empty = Backwards empty
+    {-# INLINE empty #-}
     Backwards x <|> Backwards y = Backwards (x <|> y)
+    {-# INLINE (<|>) #-}
 
 -- | Derived instance.
 instance (Foldable f) => Foldable (Backwards f) where
     foldMap f (Backwards t) = foldMap f t
+    {-# INLINE foldMap #-}
     foldr f z (Backwards t) = foldr f z t
+    {-# INLINE foldr #-}
     foldl f z (Backwards t) = foldl f z t
+    {-# INLINE foldl #-}
     foldr1 f (Backwards t) = foldr1 f t
+    {-# INLINE foldr1 #-}
     foldl1 f (Backwards t) = foldl1 f t
+    {-# INLINE foldl1 #-}
 
 -- | Derived instance.
 instance (Traversable f) => Traversable (Backwards f) where
     traverse f (Backwards t) = fmap Backwards (traverse f t)
+    {-# INLINE traverse #-}
     sequenceA (Backwards t) = fmap Backwards (sequenceA t)
+    {-# INLINE sequenceA #-}

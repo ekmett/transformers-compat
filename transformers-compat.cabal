@@ -10,7 +10,7 @@ stability:     provisional
 homepage:      http://github.com/ekmett/transformers-compat/
 bug-reports:   http://github.com/ekmett/transformers-compat/issues
 copyright:     Copyright (C) 2012-2015 Edward A. Kmett
-synopsis:      A small compatibility shim exposing the new types from transformers 0.3 and 0.4 to older Haskell platforms.
+synopsis:      A small compatibility shim exposing the new types from transformers 0.3, 0.4, and 0.5 to older Haskell platforms.
 description:
   This package includes backported versions of types that were added
   to transformers in transformers 0.3, 0.4, and 0.5 for users who need strict
@@ -87,12 +87,9 @@ library
     Paths_transformers_compat
 
   if flag(four)
+    cpp-options: -DTRANSFORMERS_FOUR
     build-depends: transformers >= 0.4 && < 0.5
   else
-    hs-source-dirs: 0.5
-    if impl(ghc >=7.4 && < 7.6)
-      build-depends: ghc-prim
-
     if flag(three)
       hs-source-dirs: 0.3
       build-depends: transformers >= 0.3 && < 0.4, mtl >= 2.1 && < 2.2
@@ -104,6 +101,10 @@ library
       else
         build-depends: transformers >= 0.5 && < 0.6
 
+  if impl(ghc >= 7.2) || flag(generic-deriving)
+    hs-source-dirs: generics
+    build-depends: ghc-prim
+
   if flag(mtl)
     cpp-options: -DMTL
 
@@ -114,8 +115,6 @@ library
 
   if !flag(mtl) && !flag(generic-deriving)
     cpp-options: -DHASKELL98
-  else
-    build-depends: ghc-prim
 
   if flag(two)
     exposed-modules:
@@ -130,6 +129,7 @@ library
       Data.Functor.Classes
       Data.Functor.Sum
 
-  if !flag(four) && (impl(ghc >= 7.2) || flag(generic-deriving))
+  if impl(ghc >= 7.2) || flag(generic-deriving)
     exposed-modules:
       Data.Functor.Classes.Generic
+      Data.Functor.Classes.Generic.Internal

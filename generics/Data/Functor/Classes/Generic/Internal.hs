@@ -685,9 +685,18 @@ instance Show c => GShow1Con v (K1 i c) where
 instance (Selector s, GShow1Con v f) => GShow1Con v (S1 s f) where
   gliftShowsPrecCon opts t sas p sel@(M1 x)
     | selName sel == "" =   gliftShowsPrecCon opts t sas p x
-    | otherwise         =   showString (selName sel)
+    | otherwise         =   infixRec
                           . showString " = "
                           . gliftShowsPrecCon opts t sas 0 x
+    where
+      infixRec :: ShowS
+      infixRec | isSymVar selectorName
+               = showChar '(' . showString selectorName . showChar ')'
+               | otherwise
+               = showString selectorName
+
+      selectorName :: String
+      selectorName = selName sel
 
 instance (GShow1Con v f, GShow1Con v g) => GShow1Con v (f :*: g) where
   gliftShowsPrecCon opts t sas p (a :*: b) =

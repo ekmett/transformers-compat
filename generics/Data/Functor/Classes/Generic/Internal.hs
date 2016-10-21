@@ -86,27 +86,31 @@ import Generics.Deriving.Base hiding (prec)
 #else
 import GHC.Generics hiding (prec)
 #endif
-import GHC.Read (list, paren, parens)
+import GHC.Read (paren, parens)
 import GHC.Show (appPrec, appPrec1, showSpace)
 import Text.ParserCombinators.ReadPrec
 import Text.Read (Read(..))
 import Text.Read.Lex (Lexeme(..))
+
+#if !defined(TRANSFORMERS_FOUR)
+import GHC.Read (list)
+#else
 import Text.Show (showListWith)
+#endif
 
 #if MIN_VERSION_base(4,7,0)
-import Data.Coerce (coerce)
 import GHC.Read (expectP)
 #else
 import GHC.Read (lexP)
 import Unsafe.Coerce (unsafeCoerce)
 #endif
 
-#if !(MIN_VERSION_base(4,8,0))
-import Data.Monoid
+#if MIN_VERSION_base(4,7,0) || defined(GENERIC_DERIVING)
+import GHC.Exts
 #endif
 
-#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
-import GHC.Exts
+#if !(MIN_VERSION_base(4,8,0))
+import Data.Monoid
 #endif
 
 -------------------------------------------------------------------------------
@@ -566,7 +570,7 @@ instance Read1 f => GRead1Con V4 (Rec1 f) where
   gliftReadPrecCon _ V4Read1Args = coerceRec1 $ readS_to_Prec readsPrec1
 
 instance (Functor f, Read1 f, GRead1Con V4 g) => GRead1Con V4 (f :.: g) where
-  gliftReadPrecCon t (V4Read1Args :: Read1Args V4 a) =
+  gliftReadPrecCon _ (V4Read1Args :: Read1Args V4 a) =
       coerceComp1 $ fmap (fmap getApply) $ readS_to_Prec crp1
     where
       crp1 :: Int -> ReadS (f (Apply g a))
@@ -732,7 +736,7 @@ instance Show1 f => GShow1Con V4 (Rec1 f) where
   gliftShowsPrecCon _ _ V4Show1Args p (Rec1 x) = showsPrec1 p x
 
 instance (Functor f, Show1 f, GShow1Con V4 g) => GShow1Con V4 (f :.: g) where
-  gliftShowsPrecCon opts t V4Show1Args p (Comp1 x) = showsPrec1 p (fmap Apply x)
+  gliftShowsPrecCon _ _ V4Show1Args p (Comp1 x) = showsPrec1 p (fmap Apply x)
 #else
 instance GShow1Con NonV4 Par1 where
   gliftShowsPrecCon _ _ (NonV4Show1Args sp _) p (Par1 x) = sp p x

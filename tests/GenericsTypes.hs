@@ -29,6 +29,10 @@ import GHC.Exts
 
 import Test.QuickCheck (Arbitrary(..), oneof)
 
+#if __GLASGOW_HASKELL__ < 702
+import Text.Read.Deriving (deriveRead)
+#endif
+
 data TestParam a = TestParam a (Maybe a) (Maybe (Maybe a))
   deriving (Eq, Ord, Read, Show)
 
@@ -51,7 +55,7 @@ instance Arbitrary a => Arbitrary (Prim a) where
 data T# a = MkT1# a
           | MkT2# { getT2# :: a, (##) :: a }
           | a `MkT3#` a
-  deriving (Eq, Ord, Read, Show)
+  deriving (Eq, Ord, Show)
 
 instance Arbitrary a => Arbitrary (T# a) where
   arbitrary = oneof [ MkT1# <$> arbitrary
@@ -100,6 +104,13 @@ instance Arbitrary a => Arbitrary (Record a) where
   arbitrary = oneof [ Prefix <$> arbitrary <*> arbitrary
                     , (:%:)  <$> arbitrary <*> arbitrary
                     ]
+
+#if __GLASGOW_HASKELL__ >= 702
+deriving instance Read a => Read (T# a)
+#else
+-- Workaround for GHC Trac #5041
+$(deriveRead ''T#)
+#endif
 
 #if __GLASGOW_HASKELL__ >= 706
 deriving instance Generic1 TestParam

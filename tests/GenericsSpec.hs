@@ -69,7 +69,6 @@ showSpec :: forall f a. (Arbitrary (f a), Show a, Show (f a), Show1 f)
 showSpec _ = prop "has a valid Show1 instance" (prop_Show :: Int -> f a -> Bool)
 
 classes1Spec :: forall f a. (Arbitrary (f a),
-                             Eq   a, Eq   (f a), Eq1   f,
                              Ord  a, Ord  (f a), Ord1  f,
                              Read a, Read (f a), Read1 f,
                              Show a, Show (f a), Show1 f)

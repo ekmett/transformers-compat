@@ -94,7 +94,6 @@ import Text.Read.Lex (Lexeme(..))
 
 #if !defined(TRANSFORMERS_FOUR)
 import GHC.Read (list)
-#else
 import Text.Show (showListWith)
 #endif
 

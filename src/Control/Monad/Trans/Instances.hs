@@ -385,7 +385,9 @@ instance Read1 Proxy where
         readParen (d > 10) (\r -> [(Proxy, s) | ("Proxy",s) <- lex r ])
 #   endif
 #  endif
+# endif
 
+# if !(MIN_VERSION_base(4,8,0))
 -- Data.Functor.Identity
 instance (Bits a) => Bits (Identity a) where
     Identity x .&. Identity y     = Identity (x .&. y)

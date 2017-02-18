@@ -3,8 +3,10 @@
 # ifndef HASKELL98
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE StandaloneDeriving #-}
-#if __GLASGOW_HASKELL__ >= 702
+# if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
+# elif __GLASGOW_HASKELL__ >= 702
+{-# LANGUAGE Trustworthy #-}
 # endif
 # if __GLASGOW_HASKELL__ >= 706
 {-# LANGUAGE PolyKinds #-}

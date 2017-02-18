@@ -71,12 +71,15 @@ import           Data.Functor.Reverse (Reverse(..))
 import           Data.Functor.Sum (Sum(..))
 
 import           Control.Applicative
+import           Control.Arrow (Arrow((***)))
 import           Control.Monad (MonadPlus(..))
 import           Control.Monad.Fix (MonadFix(..))
+import           Data.Bits
 import           Data.Foldable (Foldable(..))
 import           Data.Ix (Ix(..))
 import           Data.Maybe (fromMaybe)
 import           Data.Monoid (Monoid(..))
+import           Data.String (IsString(fromString))
 import           Data.Traversable (Traversable(..))
 import           Foreign (Storable(..), castPtr)
 
@@ -84,8 +87,21 @@ import           Foreign (Storable(..), castPtr)
 import           Control.Monad.Zip (MonadZip(..))
 #endif
 
+#if MIN_VERSION_base(4,7,0)
+import           Data.Proxy (Proxy(..))
+#endif
+
 #if MIN_VERSION_base(4,8,0)
 import           Data.Bifunctor (Bifunctor(..))
+#endif
+
+#if MIN_VERSION_base(4,9,0)
+import qualified Control.Monad.Fail as Fail (MonadFail(..))
+#endif
+
+#if MIN_VERSION_base(4,10,0)
+import           Data.Bifoldable (Bifoldable(..))
+import           Data.Bitraversable (Bitraversable(..))
 #endif
 
 #ifndef HASKELL98
@@ -334,6 +350,181 @@ instance (Storable a) => Storable (Identity a) where
     pokeByteOff p i (Identity x) = pokeByteOff p i x
     peek p                       = fmap runIdentity (peek (castPtr p))
     poke p (Identity x)          = poke (castPtr p) x
+# endif
+#endif
+
+#if !(MIN_VERSION_transformers(0,5,3))
+# if !(MIN_VERSION_base(4,9,0))
+#  if MIN_VERSION_base(4,7,0)
+-- Data.Proxy
+#   if defined(TRANSFORMERS_FOUR)
+instance Eq1 Proxy where
+    eq1 _ _ = True
+
+instance Ord1 Proxy where
+    compare1 _ _ = EQ
+
+instance Show1 Proxy where
+    showsPrec1 _ _ = showString "Proxy"
+
+instance Read1 Proxy where
+    readsPrec1 d =
+        readParen (d > 10) (\r -> [(Proxy, s) | ("Proxy",s) <- lex r ])
+#   elif MIN_VERSION_transformers(0,5,0)
+instance Eq1 Proxy where
+    liftEq _ _ _ = True
+
+instance Ord1 Proxy where
+    liftCompare _ _ _ = EQ
+
+instance Show1 Proxy where
+    liftShowsPrec _ _ _ _ = showString "Proxy"
+
+instance Read1 Proxy where
+    liftReadsPrec _ _ d =
+        readParen (d > 10) (\r -> [(Proxy, s) | ("Proxy",s) <- lex r ])
+#   endif
+#  endif
+
+-- Data.Functor.Identity
+instance (Bits a) => Bits (Identity a) where
+    Identity x .&. Identity y     = Identity (x .&. y)
+    Identity x .|. Identity y     = Identity (x .|. y)
+    xor (Identity x) (Identity y) = Identity (xor x y)
+    complement   (Identity x)     = Identity (complement x)
+    shift        (Identity x) i   = Identity (shift    x i)
+    rotate       (Identity x) i   = Identity (rotate   x i)
+    setBit       (Identity x) i   = Identity (setBit   x i)
+    clearBit     (Identity x) i   = Identity (clearBit x i)
+    shiftL       (Identity x) i   = Identity (shiftL   x i)
+    shiftR       (Identity x) i   = Identity (shiftR   x i)
+    rotateL      (Identity x) i   = Identity (rotateL  x i)
+    rotateR      (Identity x) i   = Identity (rotateR  x i)
+    testBit      (Identity x) i   = testBit x i
+    bitSize      (Identity x)     = bitSize x
+    isSigned     (Identity x)     = isSigned x
+    bit i                         = Identity (bit i)
+#  if MIN_VERSION_base(4,5,0)
+    unsafeShiftL (Identity x) i   = Identity (unsafeShiftL x i)
+    unsafeShiftR (Identity x) i   = Identity (unsafeShiftR x i)
+    popCount     (Identity x)     = popCount x
+#  endif
+#  if MIN_VERSION_base(4,7,0)
+    zeroBits                      = Identity zeroBits
+    bitSizeMaybe (Identity x)     = bitSizeMaybe x
+#  endif
+
+#  if MIN_VERSION_base(4,7,0)
+instance (FiniteBits a) => FiniteBits (Identity a) where
+    finiteBitSize (Identity x) = finiteBitSize x
+#  endif
+
+instance (Floating a) => Floating (Identity a) where
+    pi                                = Identity pi
+    exp   (Identity x)                = Identity (exp x)
+    log   (Identity x)                = Identity (log x)
+    sqrt  (Identity x)                = Identity (sqrt x)
+    sin   (Identity x)                = Identity (sin x)
+    cos   (Identity x)                = Identity (cos x)
+    tan   (Identity x)                = Identity (tan x)
+    asin  (Identity x)                = Identity (asin x)
+    acos  (Identity x)                = Identity (acos x)
+    atan  (Identity x)                = Identity (atan x)
+    sinh  (Identity x)                = Identity (sinh x)
+    cosh  (Identity x)                = Identity (cosh x)
+    tanh  (Identity x)                = Identity (tanh x)
+    asinh (Identity x)                = Identity (asinh x)
+    acosh (Identity x)                = Identity (acosh x)
+    atanh (Identity x)                = Identity (atanh x)
+    Identity x ** Identity y          = Identity (x ** y)
+    logBase (Identity x) (Identity y) = Identity (logBase x y)
+
+instance (Fractional a) => Fractional (Identity a) where
+    Identity x / Identity y = Identity (x / y)
+    recip (Identity x)      = Identity (recip x)
+    fromRational r          = Identity (fromRational r)
+
+instance (IsString a) => IsString (Identity a) where
+    fromString s = Identity (fromString s)
+
+instance (Integral a) => Integral (Identity a) where
+    quot    (Identity x) (Identity y) = Identity (quot x y)
+    rem     (Identity x) (Identity y) = Identity (rem  x y)
+    div     (Identity x) (Identity y) = Identity (div  x y)
+    mod     (Identity x) (Identity y) = Identity (mod  x y)
+    quotRem (Identity x) (Identity y) = (Identity *** Identity) (quotRem x y)
+    divMod  (Identity x) (Identity y) = (Identity *** Identity) (divMod  x y)
+    toInteger (Identity x)            = toInteger x
+
+instance (Num a) => Num (Identity a) where
+    Identity x + Identity y = Identity (x + y)
+    Identity x - Identity y = Identity (x - y)
+    Identity x * Identity y = Identity (x * y)
+    negate (Identity x)     = Identity (negate x)
+    abs    (Identity x)     = Identity (abs    x)
+    signum (Identity x)     = Identity (signum x)
+    fromInteger n           = Identity (fromInteger n)
+
+instance (Real a) => Real (Identity a) where
+    toRational (Identity x) = toRational x
+
+instance (RealFloat a) => RealFloat (Identity a) where
+    floatRadix     (Identity x)     = floatRadix     x
+    floatDigits    (Identity x)     = floatDigits    x
+    floatRange     (Identity x)     = floatRange     x
+    decodeFloat    (Identity x)     = decodeFloat    x
+    exponent       (Identity x)     = exponent       x
+    isNaN          (Identity x)     = isNaN          x
+    isInfinite     (Identity x)     = isInfinite     x
+    isDenormalized (Identity x)     = isDenormalized x
+    isNegativeZero (Identity x)     = isNegativeZero x
+    isIEEE         (Identity x)     = isIEEE         x
+    significand    (Identity x)     = significand (Identity x)
+    scaleFloat s   (Identity x)     = Identity (scaleFloat s x)
+    encodeFloat m n                 = Identity (encodeFloat m n)
+    atan2 (Identity x) (Identity y) = Identity (atan2 x y)
+
+instance (RealFrac a) => RealFrac (Identity a) where
+    properFraction (Identity x) = (id *** Identity) (properFraction x)
+    truncate       (Identity x) = truncate x
+    round          (Identity x) = round    x
+    ceiling        (Identity x) = ceiling  x
+    floor          (Identity x) = floor    x
+# endif
+
+# if MIN_VERSION_transformers(0,3,0)
+-- Data.Functor.Reverse
+instance (Monad m) => Monad (Reverse m) where
+    return a = Reverse (return a)
+    {-# INLINE return #-}
+    m >>= f = Reverse (getReverse m >>= getReverse . f)
+    {-# INLINE (>>=) #-}
+    fail msg = Reverse (fail msg)
+    {-# INLINE fail #-}
+
+#  if MIN_VERSION_base(4,9,0)
+instance (Fail.MonadFail m) => Fail.MonadFail (Reverse m) where
+    fail msg = Reverse (Fail.fail msg)
+    {-# INLINE fail #-}
+#  endif
+
+instance (MonadPlus m) => MonadPlus (Reverse m) where
+    mzero = Reverse mzero
+    {-# INLINE mzero #-}
+    Reverse x `mplus` Reverse y = Reverse (x `mplus` y)
+    {-# INLINE mplus #-}
+# endif
+#endif
+
+#if !(MIN_VERSION_transformers(0,5,4))
+# if MIN_VERSION_base(4,10,0)
+instance Bifoldable Constant where
+    bifoldMap f _ (Constant a) = f a
+    {-# INLINE bifoldMap #-}
+
+instance Bitraversable Constant where
+    bitraverse f _ (Constant a) = Constant <$> f a
+    {-# INLINE bitraverse #-}
 # endif
 #endif
 

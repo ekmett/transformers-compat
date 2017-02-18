@@ -26,10 +26,12 @@ module Control.Applicative.Lift (
     Lift(..),
     unLift,
     mapLift,
+    elimLift,
     -- * Collecting errors
     Errors,
     runErrors,
-    failure
+    failure,
+    eitherToErrors
   ) where
 
 import Data.Functor.Classes
@@ -119,6 +121,17 @@ mapLift _ (Pure x) = Pure x
 mapLift f (Other e) = Other (f e)
 {-# INLINE mapLift #-}
 
+-- | Eliminator for 'Lift'.
+--
+-- * @'elimLift' f g . 'pure' = f@
+--
+-- * @'elimLift' f g . 'Other' = g@
+--
+elimLift :: (a -> r) -> (f a -> r) -> Lift f a -> r
+elimLift f _ (Pure x) = f x
+elimLift _ g (Other e) = g e
+{-# INLINE elimLift #-}
+
 -- | An applicative functor that collects a monoid (e.g. lists) of errors.
 -- A sequence of computations fails if any of its components do, but
 -- unlike monads made with 'ExceptT' from "Control.Monad.Trans.Except",
@@ -149,3 +162,7 @@ runErrors (Pure x) = Right x
 failure :: e -> Errors e a
 failure e = Other (Constant e)
 {-# INLINE failure #-}
+
+-- | Convert from 'Either' to 'Errors' (inverse of 'runErrors').
+eitherToErrors :: Either e a -> Errors e a
+eitherToErrors = either failure Pure

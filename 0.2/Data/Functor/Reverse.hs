@@ -30,6 +30,10 @@ import Data.Functor.Classes
 
 import Prelude hiding (foldr, foldr1, foldl, foldl1)
 import Control.Applicative
+import Control.Monad
+#if MIN_VERSION_base(4,9,0)
+import qualified Control.Monad.Fail as Fail
+#endif
 import Data.Foldable
 import Data.Traversable
 import Data.Monoid
@@ -77,6 +81,22 @@ instance (Alternative f) => Alternative (Reverse f) where
     {-# INLINE empty #-}
     Reverse x <|> Reverse y = Reverse (x <|> y)
     {-# INLINE (<|>) #-}
+
+-- | Derived instance.
+instance (Monad m) => Monad (Reverse m) where
+    return a = Reverse (return a)
+    {-# INLINE return #-}
+    m >>= f = Reverse (getReverse m >>= getReverse . f)
+    {-# INLINE (>>=) #-}
+    fail msg = Reverse (fail msg)
+    {-# INLINE fail #-}
+
+-- | Derived instance.
+instance (MonadPlus m) => MonadPlus (Reverse m) where
+    mzero = Reverse mzero
+    {-# INLINE mzero #-}
+    Reverse x `mplus` Reverse y = Reverse (x `mplus` y)
+    {-# INLINE mplus #-}
 
 -- | Fold from right to left.
 instance (Foldable f) => Foldable (Reverse f) where

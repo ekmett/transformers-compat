@@ -42,9 +42,13 @@ module Control.Monad.Trans.Select (
     Select,
     select,
     runSelect,
+    mapSelect,
     -- * The SelectT monad transformer
     SelectT(SelectT),
     runSelectT,
+    mapSelectT,
+    -- * Monad transformation
+    selectToContT,
     selectToCont,
     ) where
 
@@ -89,6 +93,23 @@ runSelectT :: SelectT r m a -> (a -> m r) -> m a
 runSelectT (SelectT g) = g
 {-# INLINE runSelectT #-}
 
+-- | Apply a function to transform the result of a selection computation.
+-- This has a more restricted type than the @map@ operations for other
+-- monad transformers, because 'SelectT' does not define a functor in
+-- the category of monads.
+--
+-- * @'runSelectT' ('mapSelectT' f m) = f . 'runSelectT' m@
+mapSelectT :: (m a -> m a) -> SelectT r m a -> SelectT r m a
+mapSelectT f m = SelectT $ f . runSelectT m
+{-# INLINE mapSelectT #-}
+
+-- | Apply a function to transform the result of a selection computation.
+--
+-- * @'runSelect' ('mapSelect' f m) = f . 'runSelect' m@
+mapSelect :: (a -> a) -> Select r a -> Select r a
+mapSelect f = mapSelectT (Identity . f . runIdentity)
+{-# INLINE mapSelect #-}
+
 instance (Functor m) => Functor (SelectT r m) where
     fmap f (SelectT g) = SelectT (fmap f . g . (. f))
     {-# INLINE fmap #-}
@@ -101,6 +122,8 @@ instance (Functor m, Monad m) => Applicative (SelectT r m) where
         f <- gf ((>>= k) . h)
         h f
     {-# INLINE (<*>) #-}
+    m *> k = m >>= \_ -> k
+    {-# INLINE (*>) #-}
 
 instance (Functor m, MonadPlus m) => Alternative (SelectT r m) where
     empty = mzero
@@ -144,6 +167,11 @@ deriving instance Typeable SelectT
 #endif
 
 -- | Convert a selection computation to a continuation-passing computation.
-selectToCont :: (Monad m) => SelectT r m a -> ContT r m a
-selectToCont (SelectT g) = ContT $ \ k -> g k >>= k
+selectToContT :: (Monad m) => SelectT r m a -> ContT r m a
+selectToContT (SelectT g) = ContT $ \ k -> g k >>= k
 {-# INLINE selectToCont #-}
+
+-- | Deprecated name for 'selectToContT'.
+{-# DEPRECATED selectToCont "Use selectToContT instead" #-}
+selectToCont :: (Monad m) => SelectT r m a -> ContT r m a
+selectToCont = selectToContT

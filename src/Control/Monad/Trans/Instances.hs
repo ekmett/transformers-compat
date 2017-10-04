@@ -97,6 +97,7 @@ import           Data.Bifunctor (Bifunctor(..))
 
 #if MIN_VERSION_base(4,9,0)
 import qualified Control.Monad.Fail as Fail (MonadFail(..))
+import qualified Data.Semigroup as Semigroup (Semigroup(..))
 #endif
 
 #if MIN_VERSION_base(4,10,0)
@@ -527,6 +528,14 @@ instance Bifoldable Constant where
 instance Bitraversable Constant where
     bitraverse f _ (Constant a) = Constant <$> f a
     {-# INLINE bitraverse #-}
+# endif
+#endif
+
+#if !(MIN_VERSION_transformers(0,5,5))
+# if MIN_VERSION_base(4,9,0)
+instance (Semigroup.Semigroup a) => Semigroup.Semigroup (Constant a b) where
+    Constant x <> Constant y = Constant (x Semigroup.<> y)
+    {-# INLINE (<>) #-}
 # endif
 #endif
 

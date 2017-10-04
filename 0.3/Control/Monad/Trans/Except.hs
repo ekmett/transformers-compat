@@ -204,6 +204,8 @@ instance (Functor m, Monad m) => Applicative (ExceptT e m) where
                     Left e -> return (Left e)
                     Right x -> return (Right (k x))
     {-# INLINEABLE (<*>) #-}
+    m *> k = m >>= \_ -> k
+    {-# INLINE (*>) #-}
 
 instance (Functor m, Monad m, Monoid e) => Alternative (ExceptT e m) where
     empty = ExceptT $ return (Left mempty)

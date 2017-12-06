@@ -12,6 +12,10 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
+#if __GLASGOW_HASKELL__ >= 708
+{-# LANGUAGE EmptyCase #-}
+#endif
+
 {-|
 Module:      Data.Functor.Classes.Generic
 Copyright:   (C) 2015-2016 Edward Kmett, Ryan Scott
@@ -205,7 +209,7 @@ instance GEq1 v U1 where
   gliftEq _ U1 U1 = True
 
 instance GEq1 v V1 where
-  gliftEq _ !_ = undefined
+  gliftEq _ _ _ = True
 
 #if defined(TRANSFORMERS_FOUR)
 instance GEq1 V4 Par1 where
@@ -309,7 +313,7 @@ instance GOrd1 v U1 where
   gliftCompare _ U1 U1 = EQ
 
 instance GOrd1 v V1 where
-  gliftCompare _ !_ = undefined
+  gliftCompare _ _ _ = EQ
 
 #if defined(TRANSFORMERS_FOUR)
 instance GOrd1 V4 Par1 where
@@ -634,7 +638,11 @@ instance GShow1 v f => GShow1 v (D1 d f) where
   gliftShowsPrec opts sas p (M1 x) = gliftShowsPrec opts sas p x
 
 instance GShow1 v V1 where
+#if __GLASGOW_HASKELL__ >= 708
+  gliftShowsPrec _ _ _  x = case x of {}
+#else
   gliftShowsPrec _ _ _ !_ = undefined
+#endif
 
 instance (GShow1 v f, GShow1 v g) => GShow1 v (f :+: g) where
   gliftShowsPrec opts sas p (L1 x) = gliftShowsPrec opts sas p x

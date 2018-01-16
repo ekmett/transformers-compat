@@ -10,7 +10,7 @@ stability:     provisional
 homepage:      http://github.com/ekmett/transformers-compat/
 bug-reports:   http://github.com/ekmett/transformers-compat/issues
 copyright:     Copyright (C) 2012-2015 Edward A. Kmett
-synopsis:      A small compatibility shim exposing the new types from transformers 0.3, 0.4, and 0.5 to older Haskell platforms.
+synopsis:      A small compatibility shim for the transformers library
 description:
   This package includes backported versions of types that were added
   to transformers in transformers 0.3, 0.4, and 0.5 for users who need strict
@@ -31,6 +31,7 @@ tested-with:   GHC == 7.0.4
              , GHC == 7.10.3
              , GHC == 8.0.2
              , GHC == 8.2.2
+             , GHC == 8.4.1
 extra-source-files:
   .travis.yml
   .ghci

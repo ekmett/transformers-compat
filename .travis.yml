@@ -38,7 +38,6 @@ addons:
   apt:
     packages: &apt_packages
       - ghc-ppa-tools
-      - hlint
 
 matrix:
   include:
@@ -252,14 +251,6 @@ script:
   # haddock
   - rm -rf ./dist-newstyle
   - if $HADDOCK; then cabal new-haddock -w ${HC} ${CABALFLAGS} ${TEST} ${BENCH} all; else echo "Skipping haddock generation";fi
-
-  # hlint
-  - (cd transformers-compat-* \
-                              && hlint 0.2      --cpp-define HLINT \
-                              && hlint 0.3      --cpp-define HLINT \
-                              && hlint 0.5      --cpp-define HLINT \
-                              && hlint generics --cpp-define HLINT \
-                              && hlint src      --cpp-define HLINT)
 
 # REGENDATA ["-o",".travis.yml","--irc-channel=irc.freenode.org#haskell-lens","--no-no-tests-no-bench","--no-installed","cabal.project"]
 # EOF

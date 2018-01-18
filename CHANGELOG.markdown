@@ -17,6 +17,8 @@ next
   * Backport `Eq1`, `Ord1`, `Read1`, and `Show1` instances for `Data.Proxy`
 * Backport changes from `transformers-0.5.2` (i.e., add more `INLINE` annotations)
 * Backport changes from `transformers-0.5.1` (i.e., add `Bounded`, `Enum`, `Ix`, and `Storable` instances for `Identity`)
+* GHC 8.4 compatibility:
+  * The `Semigroup` instance for `Constant` is now defined in `base`, so we have no need to define it on GHC 8.4 and above.
 
 0.5.1.4
 -------

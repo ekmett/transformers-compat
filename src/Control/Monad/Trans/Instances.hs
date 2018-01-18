@@ -532,7 +532,7 @@ instance Bitraversable Constant where
 #endif
 
 #if !(MIN_VERSION_transformers(0,5,5))
-# if MIN_VERSION_base(4,9,0)
+# if MIN_VERSION_base(4,9,0) && !(MIN_VERSION_base(4,12,0))
 instance (Semigroup.Semigroup a) => Semigroup.Semigroup (Constant a b) where
     Constant x <> Constant y = Constant (x Semigroup.<> y)
     {-# INLINE (<>) #-}

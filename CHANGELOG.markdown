@@ -1,5 +1,30 @@
-next
-----
+0.6.0.6
+-------
+* Each of versions 0.6.0.2–0.6.0.6 is a 0.6 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6 release notes describe the changes in this version.
+  This release is configured with none of `-ftwo`, `-fthree`, `-ffour`, or `-ffive` (which works with `transformers-0.5.3` and above).
+
+0.6.0.5
+-------
+* Each of versions 0.6.0.2–0.6.0.6 is a 0.6 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6 release notes describe the changes in this version.
+  This release is configured with `-ffive` (which works with `transformers-0.5` up until, but not including, `transformers-0.5.3`).
+
+0.6.0.4
+-------
+* Each of versions 0.6.0.2–0.6.0.6 is a 0.6 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6 release notes describe the changes in this version.
+  This release is configured with `-ffour` (which works with the `transformers-0.4` series).
+
+0.6.0.3
+-------
+* Each of versions 0.6.0.2–0.6.0.6 is a 0.6 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6 release notes describe the changes in this version.
+  This release is configured with `-fthree` (which works with the `transformers-0.3` series).
+
+0.6.0.2
+-------
+* Each of versions 0.6.0.2–0.6.0.6 is a 0.6 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6 release notes describe the changes in this version.
+  This release is configured with `-ftwo` (which works with the `transformers-0.2` series).
+
+0.6
+---
 * Introduce the `Data.Functor.Classes.Generic` module, which provides functions that can generically implement methods in the `Eq1`, `Ord1`, `Read1`, and `Show1` classes (without the usual boilerplate involved).
 * Introduce the `generic-deriving` flag. When enabled, `transformers-compat` will depend on the `generic-deriving` library on older versions of GHC to backport `GHC.Generics` support for `Generic` instances and the machinery in `Data.Functor.Classes.Generic`.
 * Some instances were present in `Data.Functor.Sum` but not in `Control.Monad.Trans.Instances` (e.g., the `Generic`, `Typeable`, and `Data` instances for `Sum`). This has been fixed.

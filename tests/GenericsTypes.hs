@@ -29,7 +29,7 @@ import GHC.Exts
 
 import Test.QuickCheck (Arbitrary(..), oneof)
 
-#if __GLASGOW_HASKELL__ < 702
+#if __GLASGOW_HASKELL__ == 700 || __GLASGOW_HASKELL__ == 804
 import Text.Read.Deriving (deriveRead)
 #endif
 
@@ -105,11 +105,14 @@ instance Arbitrary a => Arbitrary (Record a) where
                     , (:%:)  <$> arbitrary <*> arbitrary
                     ]
 
-#if __GLASGOW_HASKELL__ >= 702
-deriving instance Read a => Read (T# a)
-#else
+#if __GLASGOW_HASKELL__ == 700
 -- Workaround for GHC Trac #5041
 $(deriveRead ''T#)
+#elif __GLASGOW_HASKELL__ == 804
+-- Workaround for GHC Trac #14918
+$(deriveRead ''T#)
+#else
+deriving instance Read a => Read (T# a)
 #endif
 
 #if __GLASGOW_HASKELL__ >= 706

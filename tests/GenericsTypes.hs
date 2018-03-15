@@ -138,6 +138,10 @@ $(deriveAll1 ''Prim)
 #define CLASS1_INSTANCE(class,type,method,impl) \
 instance class type where { method = impl };    \
 
+#if MIN_VERSION_transformers(0,4,0) && !(MIN_VERSION_transformers(0,5,0))
+# define TRANSFORMERS_FOUR 1
+#endif
+
 #if defined(TRANSFORMERS_FOUR)
 # define EQ1_INSTANCE(type)   CLASS1_INSTANCE(Eq1,type,eq1,eq1Default)
 # define ORD1_INSTANCE(type)  CLASS1_INSTANCE(Ord1,type,compare1,compare1Default)

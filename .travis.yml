@@ -194,7 +194,7 @@ install:
   - cabal --version
   - echo "$(${HC} --version) [$(${HC} --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - BENCH=${BENCH---enable-benchmarks}
-  - TEST=${TEST---disable-tests} # https://github.com/ekmett/transformers-compat/issues/24
+  - TEST=${TEST---enable-tests}
   - HADDOCK=${HADDOCK-true}
   - INSTALLED=${INSTALLED-true}
   - GHCHEAD=${GHCHEAD-false}
@@ -217,14 +217,17 @@ install:
       cabal new-update head.hackage -v
     fi
   - grep -Ev -- '^\s*--' ${HOME}/.cabal/config | grep -Ev '^\s*$'
-  - "printf 'packages: \".\"\\n' > cabal.project"
+  - "printf 'packages: \".\" \"./tests\"\\n' > cabal.project"
   - cat cabal.project
   - if [ -f "./configure.ac" ]; then
       (cd "." && autoreconf -i);
     fi
+  - if [ -f "./tests/configure.ac" ]; then
+      (cd "./tests" && autoreconf -i);
+    fi
   - rm -f cabal.project.freeze
   - cabal new-build -w ${HC} ${CABALFLAGS} ${TEST} ${BENCH} --project-file="cabal.project" --dep -j2 all
-  - rm -rf "."/.ghc.environment.* "."/dist
+  - rm -rf .ghc.environment.* "."/dist "./tests"/dist
   - DISTDIR=$(mktemp -d /tmp/dist-test.XXXX)
 
 # Here starts the actual work to be performed for the package under test;
@@ -232,10 +235,11 @@ install:
 script:
   # test that source-distributions can be generated
   - (cd "." && cabal sdist)
-  - mv "."/dist/transformers-compat-*.tar.gz ${DISTDIR}/
+  - (cd "./tests" && cabal sdist)
+  - mv "."/dist/transformers-compat-*.tar.gz "./tests"/dist/transformers-compat-tests-*.tar.gz ${DISTDIR}/
   - cd ${DISTDIR} || false
   - find . -maxdepth 1 -name '*.tar.gz' -exec tar -xvf '{}' \;
-  - "printf 'packages: transformers-compat-*/*.cabal\\n' > cabal.project"
+  - "printf 'packages: transformers-compat-*/*.cabal transformers-compat-tests-*/*.cabal\\n' > cabal.project"
   - cat cabal.project
 
 
@@ -245,6 +249,7 @@ script:
 
   # cabal check
   - (cd transformers-compat-* && cabal check)
+  - (cd transformers-compat-tests-* && cabal check)
 
   # haddock
   - rm -rf ./dist-newstyle

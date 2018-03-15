@@ -44,61 +44,61 @@ matrix:
     - compiler: "ghc-7.0.4"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-f-generic-deriving"
+      env: CABALFLAGS="-f-generic-deriving -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-f-generic-deriving -f-mtl"
+      env: CABALFLAGS="-f-generic-deriving -f-mtl -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ftwo"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ftwo -f-generic-deriving"
+      env: CABALFLAGS="-ftwo -f-generic-deriving -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ftwo -f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ftwo -f-generic-deriving -f-mtl"
+      env: CABALFLAGS="-ftwo -f-generic-deriving -f-mtl -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-fthree"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-fthree -f-generic-deriving"
+      env: CABALFLAGS="-fthree -f-generic-deriving -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-fthree -f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-fthree -f-generic-deriving -f-mtl"
+      env: CABALFLAGS="-fthree -f-generic-deriving -f-mtl -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ffour"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ffour -f-generic-deriving"
+      env: CABALFLAGS="-ffour -f-generic-deriving -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ffour -f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ffour -f-generic-deriving -f-mtl"
+      env: CABALFLAGS="-ffour -f-generic-deriving -f-mtl -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ffive"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ffive -f-generic-deriving"
+      env: CABALFLAGS="-ffive -f-generic-deriving -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ffive -f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ffive -f-generic-deriving -f-mtl"
+      env: CABALFLAGS="-ffive -f-generic-deriving -f-mtl -f-tests"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.2.2"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.2.2], sources: [hvr-ghc]}}

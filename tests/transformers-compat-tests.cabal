@@ -27,7 +27,14 @@ source-repository head
   type: git
   location: git://github.com/ekmett/transformers-compat.git
 
+flag tests
+  default: True
+  description: Enable the tests.
+
 test-suite spec
+  if !flag(tests)
+    buildable:          False
+
   type:                 exitcode-stdio-1.0
   main-is:              Spec.hs
   other-modules:        GenericsSpec

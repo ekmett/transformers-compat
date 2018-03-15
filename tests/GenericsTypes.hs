@@ -29,7 +29,7 @@ import GHC.Exts
 
 import Test.QuickCheck (Arbitrary(..), oneof)
 
-#if __GLASGOW_HASKELL__ < 702
+#if __GLASGOW_HASKELL__ == 700 || __GLASGOW_HASKELL__ == 804
 import Text.Read.Deriving (deriveRead)
 #endif
 
@@ -105,11 +105,14 @@ instance Arbitrary a => Arbitrary (Record a) where
                     , (:%:)  <$> arbitrary <*> arbitrary
                     ]
 
-#if __GLASGOW_HASKELL__ >= 702
-deriving instance Read a => Read (T# a)
-#else
+#if __GLASGOW_HASKELL__ == 700
 -- Workaround for GHC Trac #5041
 $(deriveRead ''T#)
+#elif __GLASGOW_HASKELL__ == 804
+-- Workaround for GHC Trac #14918
+$(deriveRead ''T#)
+#else
+deriving instance Read a => Read (T# a)
 #endif
 
 #if __GLASGOW_HASKELL__ >= 706
@@ -134,6 +137,10 @@ $(deriveAll1 ''Prim)
 
 #define CLASS1_INSTANCE(class,type,method,impl) \
 instance class type where { method = impl };    \
+
+#if MIN_VERSION_transformers(0,4,0) && !(MIN_VERSION_transformers(0,5,0))
+# define TRANSFORMERS_FOUR 1
+#endif
 
 #if defined(TRANSFORMERS_FOUR)
 # define EQ1_INSTANCE(type)   CLASS1_INSTANCE(Eq1,type,eq1,eq1Default)

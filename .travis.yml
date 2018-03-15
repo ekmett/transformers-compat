@@ -44,61 +44,61 @@ matrix:
     - compiler: "ghc-7.0.4"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-f-generic-deriving -f-tests"
+      env: CABALFLAGS="-f-generic-deriving" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-f-generic-deriving -f-mtl -f-tests"
+      env: CABALFLAGS="-f-generic-deriving -f-mtl" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ftwo"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ftwo -f-generic-deriving -f-tests"
+      env: CABALFLAGS="-ftwo -f-generic-deriving" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ftwo -f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ftwo -f-generic-deriving -f-mtl -f-tests"
+      env: CABALFLAGS="-ftwo -f-generic-deriving -f-mtl" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-fthree"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-fthree -f-generic-deriving -f-tests"
+      env: CABALFLAGS="-fthree -f-generic-deriving" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-fthree -f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-fthree -f-generic-deriving -f-mtl -f-tests"
+      env: CABALFLAGS="-fthree -f-generic-deriving -f-mtl" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ffour"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ffour -f-generic-deriving -f-tests"
+      env: CABALFLAGS="-ffour -f-generic-deriving" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ffour -f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ffour -f-generic-deriving -f-mtl -f-tests"
+      env: CABALFLAGS="-ffour -f-generic-deriving -f-mtl" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ffive"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ffive -f-generic-deriving -f-tests"
+      env: CABALFLAGS="-ffive -f-generic-deriving" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
       env: CABALFLAGS="-ffive -f-mtl"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.0.4"
-      env: CABALFLAGS="-ffive -f-generic-deriving -f-mtl -f-tests"
+      env: CABALFLAGS="-ffive -f-generic-deriving -f-mtl" TEST=--disable-tests
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.0.4], sources: [hvr-ghc]}}
     - compiler: "ghc-7.2.2"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-7.2.2], sources: [hvr-ghc]}}
@@ -226,7 +226,6 @@ install:
       (cd "./tests" && autoreconf -i);
     fi
   - rm -f cabal.project.freeze
-  - cabal new-build -w ${HC} ${CABALFLAGS} --disable-tests --disable-benchmarks --project-file="cabal.project" --dep -j2 all
   - rm -rf .ghc.environment.* "."/dist "./tests"/dist
   - DISTDIR=$(mktemp -d /tmp/dist-test.XXXX)
 
@@ -244,7 +243,7 @@ script:
 
 
   # build & run tests, build benchmarks
-  - cabal new-build -w ${HC} ${CABALFLAGS} ${TEST} ${BENCH} all
+  - cabal new-build -w ${HC} ${CABALFLAGS} ${TEST} ${BENCH} -j2 all
   - if [ "x$TEST" = "x--enable-tests" ]; then cabal new-test -w ${HC} ${CABALFLAGS} ${TEST} ${BENCH} all; fi
 
   # cabal check

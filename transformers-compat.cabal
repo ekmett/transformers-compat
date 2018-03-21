@@ -103,7 +103,9 @@ library
     if flag(four)
       cpp-options: -DTRANSFORMERS_FOUR
       hs-source-dirs: 0.5
-      build-depends: transformers >= 0.4 && < 0.5
+      -- Don't allow transformers-0.4.0.0
+      -- See https://github.com/ekmett/transformers-compat/issues/35
+      build-depends: transformers >= 0.4.1 && < 0.5
     else
       if flag(three)
         hs-source-dirs: 0.3 0.5

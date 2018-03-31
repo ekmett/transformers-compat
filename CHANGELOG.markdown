@@ -1,3 +1,34 @@
+0.6.1.6
+-------
+* Each of versions 0.6.1.2–0.6.1.6 is a 0.6.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6.1 release notes describe the changes in this version.
+  This release is configured with none of `-ftwo`, `-fthree`, `-ffour`, or `-ffive` (which works with `transformers-0.5.3` and above).
+
+0.6.1.5
+-------
+* Each of versions 0.6.1.2–0.6.1.6 is a 0.6.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6.1 release notes describe the changes in this version.
+  This release is configured with `-ffive` (which works with `transformers-0.5` up until, but not including, `transformers-0.5.3`).
+
+0.6.1.4
+-------
+* Each of versions 0.6.1.2–0.6.1.6 is a 0.6.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6.1 release notes describe the changes in this version.
+  This release is configured with `-ffour` (which works with the `transformers-0.4` series).
+
+0.6.1.3
+-------
+* Each of versions 0.6.1.2–0.6.1.6 is a 0.6.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6.1 release notes describe the changes in this version.
+  This release is configured with `-fthree` (which works with the `transformers-0.3` series).
+
+0.6.1.2
+-------
+* Each of versions 0.6.1.2–0.6.1.6 is a 0.6.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6.1 release notes describe the changes in this version.
+  This release is configured with `-ftwo` (which works with the `transformers-0.2` series).
+
+0.6.1
+-----
+* Fix an oversight in which the `Control.Monad.Trans.Accum` and
+  `Control.Monad.Trans.Select` modules were not backported when built with the
+  `-ffour` flag.
+
 0.6.0.6
 -------
 * Each of versions 0.6.0.2–0.6.0.6 is a 0.6 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6 release notes describe the changes in this version.

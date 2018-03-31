@@ -149,7 +149,7 @@ library
       Data.Functor.Classes
       Data.Functor.Sum
 
-  if flag(two) || flag(three) || flag(five)
+  if flag(two) || flag(three) || flag(four) || flag(five)
     exposed-modules:
       Control.Monad.Trans.Accum
       Control.Monad.Trans.Select

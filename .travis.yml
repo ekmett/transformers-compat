@@ -171,8 +171,8 @@ matrix:
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-8.0.2], sources: [hvr-ghc]}}
     - compiler: "ghc-8.2.2"
       addons: {apt: {packages: [*apt_packages,cabal-install-2.0,ghc-8.2.2], sources: [hvr-ghc]}}
-    - compiler: "ghc-8.4.1"
-      addons: {apt: {packages: [*apt_packages,cabal-install-2.2,ghc-8.4.1], sources: [hvr-ghc]}}
+    - compiler: "ghc-8.4.2"
+      addons: {apt: {packages: [*apt_packages,cabal-install-2.2,ghc-8.4.2], sources: [hvr-ghc]}}
     - compiler: "ghc-head"
       env: GHCHEAD=true
       addons: {apt: {packages: [*apt_packages,cabal-install-head,ghc-head], sources: [hvr-ghc]}}

@@ -1,0 +1,8 @@
+constraint-set no-mtl
+  constraints: transformers-compat -mtl
+
+constraint-set no-generic-deriving
+  constraints: transformers-compat -generic-deriving
+
+constraint-set no-mtl-no-generic-deriving
+  constraints: transformers-compat -generic-deriving, tranformers-compat -mtl

@@ -1,3 +1,8 @@
+0.6.2
+-----
+
+* Use automatic flags
+
 0.6.1.6
 -------
 * Each of versions 0.6.1.2–0.6.1.6 is a 0.6.1 build with a different set of flags configured. Building this way allows us to work around bugs in `cabal`'s backtracker. The 0.6.1 release notes describe the changes in this version.

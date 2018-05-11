@@ -1,6 +1,6 @@
 name:          transformers-compat
 category:      Compatibility
-version:       0.6.1.6
+version:       0.6.2
 license:       BSD3
 cabal-version: >= 1.8
 license-file:  LICENSE
@@ -52,22 +52,27 @@ source-repository head
 flag two
   default: False
   description: Use transformers 0.2. This will be selected by cabal picking the appropriate version.
-  manual: True
+  manual: False
 
 flag three
   default: False
-  manual: True
+  manual: False
   description: Use transformers 0.3. This will be selected by cabal picking the appropriate version.
 
 flag four
   default: False
-  manual: True
+  manual: False
   description: Use transformers 0.4. This will be selected by cabal picking the appropriate version.
 
 flag five
   default: False
-  manual: True
+  manual: False
   description: Use transformers 0.5 up until (but not including) 0.5.3. This will be selected by cabal picking the appropriate version.
+
+flag five-three
+  default: False
+  manual: False
+  description: Use transformers 0.5.3. This will be selected by cabal picking the appropriate version.
 
 flag mtl
   default: True
@@ -85,7 +90,11 @@ flag generic-deriving
 
 library
   build-depends:
-    base >= 4.3 && < 5
+    base >= 4.3 && < 5,
+    -- These are all transformers versions we support.
+    -- each flag below splits this interval into two parts.
+    -- flag-true parts are mutually exclusive, so at least one have to be on.
+    transformers >= 0.2 && <0.6
 
   hs-source-dirs:
     src
@@ -96,31 +105,45 @@ library
   other-modules:
     Paths_transformers_compat
 
+  -- automatic flags
+  if flag(five-three)
+    hs-source-dirs: 0.5
+    build-depends: transformers >= 0.5.3
+  else
+    build-depends: transformers < 0.5.3
+
   if flag(five)
     hs-source-dirs: 0.5
     build-depends: transformers >= 0.5 && < 0.5.3
   else
-    if flag(four)
-      cpp-options: -DTRANSFORMERS_FOUR
-      hs-source-dirs: 0.5
-      -- Don't allow transformers-0.4.0.0
-      -- See https://github.com/ekmett/transformers-compat/issues/35
-      build-depends: transformers >= 0.4.1 && < 0.5
-    else
-      if flag(three)
-        hs-source-dirs: 0.3 0.5
-        build-depends: transformers >= 0.3 && < 0.4
-        if flag(mtl)
-          build-depends: mtl >= 2.1 && < 2.2
-      else
-        if flag(two)
-          hs-source-dirs: 0.2 0.3 0.5
-          build-depends: transformers >= 0.2 && < 0.3
-          if flag(mtl)
-            build-depends: mtl >= 2.0 && < 2.1
-        else
-          build-depends: transformers >= 0.5.3 && < 0.6
+    build-depends: transformers < 0.5 || >= 0.5.3
 
+  if flag(four)
+    cpp-options: -DTRANSFORMERS_FOUR
+    hs-source-dirs: 0.5
+    -- Don't allow transformers-0.4.0.0
+    -- See https://github.com/ekmett/transformers-compat/issues/35
+    build-depends: transformers >= 0.4.1 && < 0.5
+  else
+    build-depends: transformers < 0.4 || >= 0.5
+
+  if flag(three)
+    hs-source-dirs: 0.3 0.5
+    build-depends: transformers >= 0.3 && < 0.4
+    if flag(mtl)
+      build-depends: mtl >= 2.1 && < 2.2
+  else
+    build-depends: transformers < 0.3 || >= 0.4
+
+  if flag(two)
+    hs-source-dirs: 0.2 0.3 0.5
+    build-depends: transformers >= 0.2 && < 0.3
+    if flag(mtl)
+      build-depends: mtl >= 2.0 && < 2.1
+  else
+    build-depends: transformers >= 0.3
+
+  -- other flags
   if impl(ghc >= 7.2) || flag(generic-deriving)
     hs-source-dirs: generics
     build-depends: ghc-prim

@@ -1,0 +1,20 @@
+constraint-set no-mtl
+  constraints: transformers-compat -mtl
+
+constraint-set no-generic-deriving
+  constraints: transformers-compat -generic-deriving
+
+constraint-set no-mtl-no-generic-deriving
+  constraints: transformers-compat -generic-deriving, tranformers-compat -mtl
+
+-- to be really sure, build with transformers which is
+-- * bundled with GHC (>=7.8 only)
+-- * is latest on Hackage (at least approximately). Note: excludes GHC-head
+
+constraint-set transformers-installed
+  ghc: >= 7.8
+  constraints: transformers installed
+
+constraint-set transformers-newer
+  ghc: < 8.5
+  constraints: transformers >=0.5.5.0

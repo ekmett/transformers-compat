@@ -1,7 +1,18 @@
 0.6.2
 -----
+* `transformers-compat` now uses automatic flags instead of manual ones.
+  This has a number of benefits:
 
-* Use automatic flags
+  * There is no need for making several simultaneous releases to support each
+    flag combination.
+  * As a result, the `cabal-install` constraint solver should have a much
+    easier time figuring out install-plans involving `transformers-compat`.
+
+  Due to old `cabal-install` bugs, `cabal-install-1.16` and older may have a
+  harder time installing this package, so it is recommended that you use
+  `cabal-install-1.18` or later. (Or, if you must use `cabal-install-1.16` or
+  older, installing `transformers-compat` with the appropriate flags should
+  help.)
 
 0.6.1.6
 -------

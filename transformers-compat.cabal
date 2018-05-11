@@ -90,7 +90,11 @@ flag generic-deriving
 
 library
   build-depends:
-    base >= 4.3 && < 5
+    base >= 4.3 && < 5,
+    -- These are all transformers versions we support.
+    -- each flag below splits this interval into two parts.
+    -- flag-true parts are mutually exclusive, so at least one have to be on.
+    transformers >= 0.2 && <0.6
 
   hs-source-dirs:
     src
@@ -104,7 +108,7 @@ library
   -- automatic flags
   if flag(five-three)
     hs-source-dirs: 0.5
-    build-depends: transformers >= 0.5.3 && < 0.6
+    build-depends: transformers >= 0.5.3
   else
     build-depends: transformers < 0.5.3
 

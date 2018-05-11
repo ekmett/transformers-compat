@@ -156,5 +156,11 @@ script:
   # Constraint set no-mtl-no-generic-deriving
   - if [ $HCNUMVER -ge 0 ]; then cabal new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='transformers-compat -generic-deriving' --constraint='tranformers-compat -mtl' all; else echo skipping...; fi
 
+  # Constraint set transformers-installed
+  - if [ $HCNUMVER -ge 70800 ]; then cabal new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='transformers installed' all; else echo skipping...; fi
+
+  # Constraint set transformers-newer
+  - if [ $HCNUMVER -ge 0 ] && [ $HCNUMVER -lt 80500 ]; then cabal new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='transformers >=0.5.5.0' all; else echo skipping...; fi
+
 # REGENDATA ["-o",".travis.yml","--ghc-head","--cabal-install-version=2.2","--jobs=2","--irc-channel=irc.freenode.org#haskell-lens","--no-no-tests-no-bench","--no-install-dependencies","--config=cabal.haskell-ci","cabal.project"]
 # EOF

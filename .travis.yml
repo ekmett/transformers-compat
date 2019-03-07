@@ -179,5 +179,5 @@ script:
   - if [ $HCNUMVER -ge 0 ] && [ $HCNUMVER -lt 80500 ]; then cabal new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='transformers >=0.5.5.0' all; else echo skipping...; fi
 
 
-# REGENDATA ["-o",".travis.yml","--ghc-head","--jobs=2","--irc-channel=irc.freenode.org#haskell-lens","--no-no-tests-no-bench","--no-install-dependencies","--config=cabal.haskell-ci","cabal.project"]
+# REGENDATA ["--output=.travis.yml","--config=cabal.haskell-ci","cabal.project"]
 # EOF

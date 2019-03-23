@@ -47,17 +47,20 @@ module Control.Monad.Trans.Instances () where
 
 import           Control.Applicative.Backwards (Backwards(..))
 import           Control.Applicative.Lift (Lift(..))
+import qualified Control.Monad.Fail as Fail (MonadFail(..))
 import           Control.Monad.IO.Class (MonadIO)
-import           Control.Monad.Trans.Class (MonadTrans)
+import           Control.Monad.Trans.Accum (AccumT(..))
+import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Cont (ContT(..))
-import           Control.Monad.Trans.Error (ErrorT(..))
-import           Control.Monad.Trans.Except ()
+import           Control.Monad.Trans.Error (Error(..), ErrorT(..))
+import           Control.Monad.Trans.Except (ExceptT(..))
 import           Control.Monad.Trans.Identity (IdentityT(..))
 import           Control.Monad.Trans.List (ListT(..))
 import           Control.Monad.Trans.Maybe (MaybeT(..))
 import qualified Control.Monad.Trans.RWS.Lazy as Lazy (RWST(..))
 import qualified Control.Monad.Trans.RWS.Strict as Strict (RWST(..))
 import           Control.Monad.Trans.Reader (ReaderT(..))
+import           Control.Monad.Trans.Select (SelectT(..))
 import qualified Control.Monad.Trans.State.Lazy as Lazy (StateT(..))
 import qualified Control.Monad.Trans.State.Strict as Strict (StateT(..))
 import qualified Control.Monad.Trans.Writer.Lazy as Lazy (WriterT(..))
@@ -96,7 +99,6 @@ import           Data.Bifunctor (Bifunctor(..))
 #endif
 
 #if MIN_VERSION_base(4,9,0)
-import qualified Control.Monad.Fail as Fail (MonadFail(..))
 import qualified Data.Semigroup as Semigroup (Semigroup(..))
 #endif
 
@@ -208,6 +210,73 @@ instance (Read a) => Read1 (Const a) where
     readsPrec1 = readsData $ readsUnary "Const" Const
 instance (Show a) => Show1 (Const a) where
     showsPrec1 d (Const x) = showsUnary "Const" d x
+#endif
+
+#if !(MIN_VERSION_transformers(0,5,0)) \
+  || (MIN_VERSION_transformers(0,5,0) && !(MIN_VERSION_base(4,9,0)))
+-- MonadFail instances
+instance (Fail.MonadFail m) => Fail.MonadFail (ContT r m) where
+    fail msg = ContT $ \ _ -> Fail.fail msg
+    {-# INLINE fail #-}
+
+instance (Monad m, Error e) => Fail.MonadFail (ErrorT e m) where
+    fail msg = ErrorT $ return (Left (strMsg msg))
+
+instance (Fail.MonadFail m) => Fail.MonadFail (IdentityT m) where
+    fail msg = IdentityT $ Fail.fail msg
+    {-# INLINE fail #-}
+
+instance (Monad m) => Fail.MonadFail (ListT m) where
+    fail _ = ListT $ return []
+    {-# INLINE fail #-}
+
+instance (Monad m) => Fail.MonadFail (MaybeT m) where
+    fail _ = MaybeT (return Nothing)
+    {-# INLINE fail #-}
+
+instance (Fail.MonadFail m) => Fail.MonadFail (ReaderT r m) where
+    fail msg = lift (Fail.fail msg)
+    {-# INLINE fail #-}
+
+instance (Monoid w, Fail.MonadFail m) => Fail.MonadFail (Lazy.RWST r w s m) where
+    fail msg = Lazy.RWST $ \ _ _ -> Fail.fail msg
+    {-# INLINE fail #-}
+
+instance (Monoid w, Fail.MonadFail m) => Fail.MonadFail (Strict.RWST r w s m) where
+    fail msg = Strict.RWST $ \ _ _ -> Fail.fail msg
+    {-# INLINE fail #-}
+
+instance (Fail.MonadFail m) => Fail.MonadFail (Lazy.StateT s m) where
+    fail str = Lazy.StateT $ \ _ -> Fail.fail str
+    {-# INLINE fail #-}
+
+instance (Fail.MonadFail m) => Fail.MonadFail (Strict.StateT s m) where
+    fail str = Strict.StateT $ \ _ -> Fail.fail str
+    {-# INLINE fail #-}
+
+instance (Monoid w, Fail.MonadFail m) => Fail.MonadFail (Lazy.WriterT w m) where
+    fail msg = Lazy.WriterT $ Fail.fail msg
+    {-# INLINE fail #-}
+
+instance (Monoid w, Fail.MonadFail m) => Fail.MonadFail (Strict.WriterT w m) where
+    fail msg = Strict.WriterT $ Fail.fail msg
+    {-# INLINE fail #-}
+
+# if MIN_VERSION_transformers(0,5,0) && !(MIN_VERSION_base(4,9,0))
+instance (Fail.MonadFail m) => Fail.MonadFail (ExceptT e m) where
+    fail = ExceptT . Fail.fail
+    {-# INLINE fail #-}
+
+#  if MIN_VERSION_transformers(0,5,3)
+instance (Monoid w, Functor m, Fail.MonadFail m) => Fail.MonadFail (AccumT w m) where
+    fail msg = AccumT $ const (Fail.fail msg)
+    {-# INLINE fail #-}
+
+instance (Fail.MonadFail m) => Fail.MonadFail (SelectT r m) where
+    fail msg = lift (Fail.fail msg)
+    {-# INLINE fail #-}
+#  endif
+# endif
 #endif
 
 #if !(MIN_VERSION_transformers(0,5,0))
@@ -505,11 +574,9 @@ instance (Monad m) => Monad (Reverse m) where
     fail msg = Reverse (fail msg)
     {-# INLINE fail #-}
 
-#  if MIN_VERSION_base(4,9,0)
 instance (Fail.MonadFail m) => Fail.MonadFail (Reverse m) where
     fail msg = Reverse (Fail.fail msg)
     {-# INLINE fail #-}
-#  endif
 
 instance (MonadPlus m) => MonadPlus (Reverse m) where
     mzero = Reverse mzero

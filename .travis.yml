@@ -164,6 +164,18 @@ script:
   # Constraint set no-mtl-no-generic-deriving
   - ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks  --constraint='transformers-compat -generic-deriving' --constraint='tranformers-compat -mtl' all
 
+  # Constraint set two
+  - if [ $HCNUMVER -lt 70900 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks  --constraint='transformers-compat +two' all ; fi
+
+  # Constraint set three
+  - if [ $HCNUMVER -lt 70900 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks  --constraint='transformers-compat +three' all ; fi
+
+  # Constraint set four
+  - if [ $HCNUMVER -lt 71100 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks  --constraint='transformers-compat +four' all ; fi
+
+  # Constraint set five
+  - if [ $HCNUMVER -lt 80300 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks  --constraint='transformers-compat +five' all ; fi
+
   # Constraint set transformers-installed
   - if [ $HCNUMVER -ge 70800 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks  --constraint='transformers installed' all ; fi
 

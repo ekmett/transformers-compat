@@ -13,6 +13,22 @@ constraint-set no-generic-deriving
 constraint-set no-mtl-no-generic-deriving
   constraints: transformers-compat -generic-deriving, tranformers-compat -mtl
 
+constraint-set two
+  ghc: <7.9
+  constraints: transformers-compat +two
+
+constraint-set three
+  ghc: <7.9
+  constraints: transformers-compat +three
+
+constraint-set four
+  ghc: <7.11
+  constraints: transformers-compat +four
+
+constraint-set five
+  ghc: <8.3
+  constraints: transformers-compat +five
+
 -- to be really sure, build with transformers which is
 -- * bundled with GHC (>=7.8 only)
 -- * is latest on Hackage (at least approximately). Note: excludes GHC-head

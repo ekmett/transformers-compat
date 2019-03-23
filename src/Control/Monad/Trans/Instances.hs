@@ -55,7 +55,7 @@ import           Control.Monad.Trans.Cont (ContT(..))
 import           Control.Monad.Trans.Error (Error(..), ErrorT(..))
 import           Control.Monad.Trans.Except (ExceptT(..))
 import           Control.Monad.Trans.Identity (IdentityT(..))
-import           Control.Monad.Trans.List (ListT(..))
+import           Control.Monad.Trans.List (ListT(..), mapListT)
 import           Control.Monad.Trans.Maybe (MaybeT(..))
 import qualified Control.Monad.Trans.RWS.Lazy as Lazy (RWST(..))
 import qualified Control.Monad.Trans.RWS.Strict as Strict (RWST(..))
@@ -75,7 +75,7 @@ import           Data.Functor.Sum (Sum(..))
 
 import           Control.Applicative
 import           Control.Arrow (Arrow((***)))
-import           Control.Monad (MonadPlus(..))
+import           Control.Monad (MonadPlus(..), liftM)
 import           Control.Monad.Fix (MonadFix(..))
 import           Data.Bits
 import           Data.Foldable (Foldable(..))
@@ -604,6 +604,14 @@ instance (Semigroup.Semigroup a) => Semigroup.Semigroup (Constant a b) where
     Constant x <> Constant y = Constant (x Semigroup.<> y)
     {-# INLINE (<>) #-}
 # endif
+#endif
+
+#if !(MIN_VERSION_transformers(0,5,6))
+instance (MonadFix m) => MonadFix (ListT m) where
+    mfix f = ListT $ mfix (runListT . f . head) >>= \ xs -> case xs of
+        [] -> return []
+        x:_ -> liftM (x:) (runListT (mfix (mapListT (liftM tail) . f)))
+    {-# INLINE mfix #-}
 #endif
 
 -- Generic(1) instances

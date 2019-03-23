@@ -1,5 +1,9 @@
 0.7 [????.??.??]
 ----------------
+* Backport changes from `transformers-0.5.6.*`:
+  * Backport the `MonadFix` instance for `ListT` in
+    `Control.Monad.Trans.Instances`.
+  * Generalize the type of `except` in `Control.Monad.Trans.Except`.
 * Backport `MonadFail` instances for `AccumT`, `Reverse`, and `SelectT` on
   pre-8.0 versions of GHC by depending on the `fail` package if necessary.
 * Backport `MonadFail` instances for monad transformer types in

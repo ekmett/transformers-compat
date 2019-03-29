@@ -1,3 +1,10 @@
+0.7 [????.??.??]
+----------------
+* Backport `MonadFail` instances for `AccumT`, `Reverse`, and `SelectT` on
+  pre-8.0 versions of GHC by depending on the `fail` package if necessary.
+* Backport `MonadFail` instances for monad transformer types in
+  `Control.Monad.Trans.Instances`.
+
 0.6.2
 -----
 * `transformers-compat` now uses automatic flags instead of manual ones.

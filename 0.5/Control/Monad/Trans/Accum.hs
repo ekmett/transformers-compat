@@ -73,9 +73,7 @@ import Data.Functor.Identity
 
 import Control.Applicative
 import Control.Monad
-#if MIN_VERSION_base(4,9,0)
 import qualified Control.Monad.Fail as Fail
-#endif
 import Control.Monad.Fix
 import Control.Monad.Signatures
 #if !MIN_VERSION_base(4,8,0)
@@ -210,11 +208,9 @@ instance (Monoid w, Functor m, Monad m) => Monad (AccumT w m) where
     fail msg = AccumT $ const (fail msg)
     {-# INLINE fail #-}
 
-#if MIN_VERSION_base(4,9,0)
-instance (Monoid w, Fail.MonadFail m) => Fail.MonadFail (AccumT w m) where
+instance (Monoid w, Functor m, Fail.MonadFail m) => Fail.MonadFail (AccumT w m) where
     fail msg = AccumT $ const (Fail.fail msg)
     {-# INLINE fail #-}
-#endif
 
 instance (Monoid w, Functor m, MonadPlus m) => MonadPlus (AccumT w m) where
     mzero       = AccumT $ const mzero

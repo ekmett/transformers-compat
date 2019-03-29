@@ -62,6 +62,7 @@ module Control.Monad.Trans.Except (
 
 import Control.Applicative
 import Control.Monad
+import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix
 import Control.Monad.IO.Class
 import Control.Monad.Signatures
@@ -227,6 +228,10 @@ instance (Monad m) => Monad (ExceptT e m) where
             Right x -> runExceptT (k x)
     {-# INLINE (>>=) #-}
     fail = ExceptT . fail
+    {-# INLINE fail #-}
+
+instance (Fail.MonadFail m) => Fail.MonadFail (ExceptT e m) where
+    fail = ExceptT . Fail.fail
     {-# INLINE fail #-}
 
 instance (Monad m, Monoid e) => MonadPlus (ExceptT e m) where

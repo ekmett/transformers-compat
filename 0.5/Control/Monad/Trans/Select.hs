@@ -58,9 +58,7 @@ import Control.Monad.Trans.Cont
 
 import Control.Applicative
 import Control.Monad
-#if MIN_VERSION_base(4,9,0)
 import qualified Control.Monad.Fail as Fail
-#endif
 import Data.Functor.Identity
 
 #if !defined(HASKELL98) && __GLASGOW_HASKELL__ >= 708
@@ -142,11 +140,9 @@ instance (Monad m) => Monad (SelectT r m) where
         h y
     {-# INLINE (>>=) #-}
 
-#if MIN_VERSION_base(4,9,0)
 instance (Fail.MonadFail m) => Fail.MonadFail (SelectT r m) where
     fail msg = lift (Fail.fail msg)
     {-# INLINE fail #-}
-#endif
 
 instance (MonadPlus m) => MonadPlus (SelectT r m) where
     mzero = SelectT (const mzero)

@@ -96,8 +96,8 @@ type Except e = ExceptT e Identity
 
 -- | Constructor for computations in the exception monad.
 -- (The inverse of 'runExcept').
-except :: Either e a -> Except e a
-except m = ExceptT (Identity m)
+except :: (Monad m) => Either e a -> ExceptT e m a
+except m = ExceptT (return m)
 {-# INLINE except #-}
 
 -- | Extractor for computations in the exception monad.

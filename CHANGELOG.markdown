@@ -1,5 +1,5 @@
-0.7 [????.??.??]
-----------------
+0.6.3 [2019.04.01]
+------------------
 * Backport changes from `transformers-0.5.6.*`:
   * Backport the `MonadFix` instance for `ListT` in
     `Control.Monad.Trans.Instances`.

@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+0.6.4 [2019.04.01]
+------------------
 * Use more conservative CPP to guard the backported `MonadFix` instance for
   `ListT`.
 

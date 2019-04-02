@@ -604,9 +604,7 @@ instance (Semigroup.Semigroup a) => Semigroup.Semigroup (Constant a b) where
     Constant x <> Constant y = Constant (x Semigroup.<> y)
     {-# INLINE (<>) #-}
 # endif
-#endif
 
-#if !(MIN_VERSION_transformers(0,5,6))
 instance (MonadFix m) => MonadFix (ListT m) where
     mfix f = ListT $ mfix (runListT . f . head) >>= \ xs -> case xs of
         [] -> return []

@@ -262,12 +262,13 @@ instance (Monoid w, Fail.MonadFail m) => Fail.MonadFail (Strict.WriterT w m) whe
     fail msg = Strict.WriterT $ Fail.fail msg
     {-# INLINE fail #-}
 
-# if MIN_VERSION_transformers(0,5,0) && !(MIN_VERSION_base(4,9,0))
+# if MIN_VERSION_transformers(0,4,0) && !(MIN_VERSION_base(4,9,0))
 instance (Fail.MonadFail m) => Fail.MonadFail (ExceptT e m) where
     fail = ExceptT . Fail.fail
     {-# INLINE fail #-}
+# endif
 
-#  if MIN_VERSION_transformers(0,5,3)
+# if MIN_VERSION_transformers(0,5,3) && !(MIN_VERSION_base(4,9,0))
 instance (Monoid w, Functor m, Fail.MonadFail m) => Fail.MonadFail (AccumT w m) where
     fail msg = AccumT $ const (Fail.fail msg)
     {-# INLINE fail #-}
@@ -275,7 +276,6 @@ instance (Monoid w, Functor m, Fail.MonadFail m) => Fail.MonadFail (AccumT w m) 
 instance (Fail.MonadFail m) => Fail.MonadFail (SelectT r m) where
     fail msg = lift (Fail.fail msg)
     {-# INLINE fail #-}
-#  endif
 # endif
 #endif
 

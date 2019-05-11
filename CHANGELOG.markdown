@@ -1,3 +1,8 @@
+0.6.5 [2019.05.11]
+------------------
+* Ensure that the backported `MonadFail` instance for `ExceptT` is available
+  when built against `transformers-0.4.*`.
+
 0.6.4 [2019.04.01]
 ------------------
 * Use more conservative CPP to guard the backported `MonadFix` instance for

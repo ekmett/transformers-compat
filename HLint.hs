@@ -1,1 +1,0 @@
-ignore "Warning: Avoid lambda"

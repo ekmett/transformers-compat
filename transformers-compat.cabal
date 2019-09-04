@@ -38,12 +38,12 @@ extra-source-files:
   .travis.yml
   .ghci
   .gitignore
+  .hlint.yaml
   .vim.custom
   config
   tests/*.hs
   tests/LICENSE
   tests/transformers-compat-tests.cabal
-  HLint.hs
   README.markdown
   CHANGELOG.markdown
 

@@ -1,11 +1,6 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module GenericsSpec (main, spec) where
-
-#if !(MIN_VERSION_base(4,8,0))
-import Control.Applicative
-#endif
 
 import Data.Functor.Classes
 import Data.Proxy (Proxy(..))
@@ -42,8 +37,8 @@ readEither' :: String -> (Int -> ReadS a) -> Either String a
 readEither' s rs =
   case [ x | (x,"") <- rs minPrec s ] of
     [x] -> Right x
-    []  -> Left "Prelude.read: no parse"
-    _   -> Left "Prelude.read: ambiguous parse"
+    []  -> Left "read': no parse"
+    _   -> Left "read': ambiguous parse"
 
 read' :: String -> (Int -> ReadS a) -> a
 read' s = either error id . readEither' s
@@ -74,10 +69,10 @@ classes1Spec :: forall f a. (Arbitrary (f a),
                              Show a, Show (f a), Show1 f)
              => String -> Proxy (f a) -> Spec
 classes1Spec str proxy =
-    describe str $ eqSpec proxy
-                *> ordSpec proxy
-                *> readSpec proxy
-                *> showSpec proxy
+    describe str $ do eqSpec proxy
+                      ordSpec proxy
+                      readSpec proxy
+                      showSpec proxy
 
 spec :: Spec
 spec = parallel $ do
@@ -86,9 +81,19 @@ spec = parallel $ do
     classes1Spec "Infix"     (Proxy :: Proxy (Infix Int))
     classes1Spec "GADT"      (Proxy :: Proxy (GADT Int))
     classes1Spec "Record"    (Proxy :: Proxy (Record Int))
-    describe "Prim" $
+    describe "Prim" $ do
         let proxy :: Proxy (Prim Int)
             proxy = Proxy
-        in eqSpec proxy
-        *> ordSpec proxy
-        *> showSpec proxy
+        eqSpec proxy
+        ordSpec proxy
+        showSpec proxy
+    describe "Empty" $ do
+        let proxy :: Proxy (Empty Int)
+            proxy = Proxy
+        eqSpec proxy
+        ordSpec proxy
+        it "should fail to parse eagerly" $ do
+          let readEmpty :: String -> (Int -> ReadS (Empty Int)) -> Either String (Empty Int)
+              readEmpty = readEither'
+          readEmpty ""             readsPrec `shouldBe` readEmpty ""             readsPrec1
+          readEmpty (error "boom") readsPrec `shouldBe` readEmpty (error "boom") readsPrec1

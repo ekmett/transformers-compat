@@ -19,9 +19,6 @@ import Control.Applicative
 import Data.Functor.Classes
 import Data.Functor.Classes.Generic
 
-#if __GLASGOW_HASKELL__ < 800
-import Generics.Deriving.TH (deriveAll1)
-#endif
 #if __GLASGOW_HASKELL__ >= 706
 import GHC.Generics (Generic1)
 #endif
@@ -29,9 +26,17 @@ import GHC.Exts
 
 import Test.QuickCheck (Arbitrary(..), oneof)
 
-#if __GLASGOW_HASKELL__ == 700 || __GLASGOW_HASKELL__ == 804
+#if __GLASGOW_HASKELL__ < 804
+import Data.Eq.Deriving (deriveEq)
+import Data.Ord.Deriving (deriveOrd)
+import Generics.Deriving.TH (deriveAll1)
+import Text.Show.Deriving (deriveShow)
+#endif
+
+#if __GLASGOW_HASKELL__ < 806
 import Text.Read.Deriving (deriveRead)
 #endif
+
 
 data TestParam a = TestParam a (Maybe a) (Maybe (Maybe a))
   deriving (Eq, Ord, Read, Show)
@@ -105,6 +110,11 @@ instance Arbitrary a => Arbitrary (Record a) where
                     , (:%:)  <$> arbitrary <*> arbitrary
                     ]
 
+data Empty a
+
+instance Arbitrary (Empty a) where
+  arbitrary = return $ error "Arbitrary Empty"
+
 #if __GLASGOW_HASKELL__ == 700
 -- Workaround for GHC Trac #5041
 $(deriveRead ''T#)
@@ -113,6 +123,20 @@ $(deriveRead ''T#)
 $(deriveRead ''T#)
 #else
 deriving instance Read a => Read (T# a)
+#endif
+
+#if __GLASGOW_HASKELL__ >= 804
+deriving instance Eq   (Empty a)
+deriving instance Ord  (Empty a)
+deriving instance Read (Empty a)
+deriving instance Show (Empty a)
+deriving instance Generic1 Empty
+#else
+$(deriveEq   ''Empty)
+$(deriveOrd  ''Empty)
+$(deriveRead ''Empty)
+$(deriveShow ''Empty)
+$(deriveAll1 ''Empty)
 #endif
 
 #if __GLASGOW_HASKELL__ >= 706
@@ -165,6 +189,7 @@ CLASS1_INSTANCES(T#)
 CLASS1_INSTANCES(Infix)
 CLASS1_INSTANCES(GADT)
 CLASS1_INSTANCES(Record)
+CLASS1_INSTANCES(Empty)
 
 EQ1_INSTANCE(Prim)
 ORD1_INSTANCE(Prim)

@@ -1,3 +1,8 @@
+next [????.??.??]
+-----------------
+* Fix a bug in which `readsPrec1Default`/`liftReadsPrecDefault` would parse
+  empty data types too strictly.
+
 0.6.5 [2019.05.11]
 ------------------
 * Ensure that the backported `MonadFail` instance for `ExceptT` is available

@@ -80,7 +80,8 @@ module Data.Functor.Classes.Generic.Internal
   , V4
   , NonV4
   , ConType(..)
-  , IsNullary(..)
+  , IsNullaryDataType(..)
+  , IsNullaryCon(..)
   ) where
 
 import Data.Char (isSymbol, ord)
@@ -390,7 +391,7 @@ readsPrec1Default = readsPrec1Options defaultOptions
 readsPrec1Options :: (GRead1 V4 (Rep1 f), Generic1 f, Read a)
                   => Options -> Int -> ReadS (f a)
 readsPrec1Options _ p =
-  readPrec_to_S (fmap to1 $ parens $ gliftReadPrec V4Read1Args) p
+  readPrec_to_S (fmap to1 $ gliftReadPrec V4Read1Args) p
 #else
 -- | A sensible default 'liftReadsPrec' implementation for 'Generic1' instances.
 liftReadsPrecDefault :: (GRead1 NonV4 (Rep1 f), Generic1 f)
@@ -402,7 +403,7 @@ liftReadsPrecDefault = liftReadsPrecOptions defaultOptions
 liftReadsPrecOptions :: (GRead1 NonV4 (Rep1 f), Generic1 f)
                      => Options -> (Int -> ReadS a) -> ReadS [a] -> Int -> ReadS (f a)
 liftReadsPrecOptions _ rp rl p =
-  readPrec_to_S (fmap to1 $ parens $ gliftReadPrec
+  readPrec_to_S (fmap to1 $ gliftReadPrec
                       (NonV4Read1Args (readS_to_Prec rp)
                                       (readS_to_Prec (const rl)))) p
 #endif
@@ -457,8 +458,16 @@ identHLexemes s | Just (ss, '#') <- snocView s = [Ident ss, Symbol "#"]
 class GRead1 v f where
   gliftReadPrec :: Read1Args v a -> ReadPrec (f a)
 
-instance GRead1 v f => GRead1 v (D1 d f) where
-  gliftReadPrec = coerceM1 . gliftReadPrec
+instance (GRead1 v f, IsNullaryDataType f) => GRead1 v (D1 d f) where
+  gliftReadPrec = coerceM1 . parensIfNonNullary . gliftReadPrec
+    where
+      x :: f p
+      x = undefined
+
+      parensIfNonNullary :: ReadPrec a -> ReadPrec a
+      parensIfNonNullary = if isNullaryDataType x
+                              then id
+                              else parens
 
 instance GRead1 v V1 where
   gliftReadPrec _ = pfail
@@ -467,7 +476,7 @@ instance (GRead1 v f, GRead1 v g) => GRead1 v (f :+: g) where
   gliftReadPrec ras =
     fmap L1 (gliftReadPrec ras) +++ fmap R1 (gliftReadPrec ras)
 
-instance (Constructor c, GRead1Con v f, IsNullary f) => GRead1 v (C1 c f) where
+instance (Constructor c, GRead1Con v f, IsNullaryCon f) => GRead1 v (C1 c f) where
   gliftReadPrec ras = coerceM1 $ case fixity of
       Prefix -> precIfNonNullary $ do
                   if conIsTuple c
@@ -489,7 +498,7 @@ instance (Constructor c, GRead1Con v f, IsNullary f) => GRead1 v (C1 c f) where
       fixity = conFixity c
 
       precIfNonNullary :: ReadPrec a -> ReadPrec a
-      precIfNonNullary = if isNullary x
+      precIfNonNullary = if isNullaryCon x
                             then id
                             else prec (if conIsRecord c
                                           then appPrec1
@@ -648,16 +657,16 @@ instance (GShow1 v f, GShow1 v g) => GShow1 v (f :+: g) where
   gliftShowsPrec opts sas p (L1 x) = gliftShowsPrec opts sas p x
   gliftShowsPrec opts sas p (R1 x) = gliftShowsPrec opts sas p x
 
-instance (Constructor c, GShow1Con v f, IsNullary f) => GShow1 v (C1 c f) where
+instance (Constructor c, GShow1Con v f, IsNullaryCon f) => GShow1 v (C1 c f) where
   gliftShowsPrec opts sas p c@(M1 x) = case fixity of
       Prefix -> showParen ( p > appPrec
-                             && not (isNullary x || conIsTuple c)
+                             && not (isNullaryCon x || conIsTuple c)
                            ) $
              (if conIsTuple c
                  then id
                  else let cn = conName c
                       in showParen (isInfixDataCon cn) (showString cn))
-           . (if isNullary x || conIsTuple c
+           . (if isNullaryCon x || conIsTuple c
                  then id
                  else showChar ' ')
            . showBraces t (gliftShowsPrecCon opts t sas appPrec1 x)
@@ -825,48 +834,63 @@ isInfixDataCon :: String -> Bool
 isInfixDataCon (':':_) = True
 isInfixDataCon _       = False
 
+-- | Class of generic representation types that represent a data type with
+-- zero or more constructors.
+class IsNullaryDataType f where
+    -- | Returns 'True' if the data type has no constructors.
+    isNullaryDataType :: f a -> Bool
+
+instance IsNullaryDataType (f :+: g) where
+    isNullaryDataType _ = False
+
+instance IsNullaryDataType (C1 c f) where
+    isNullaryDataType _ = False
+
 -- | Class of generic representation types that represent a constructor with
 -- zero or more fields.
-class IsNullary f where
-    -- Returns 'True' if the constructor has no fields.
-    isNullary :: f a -> Bool
+class IsNullaryCon f where
+    -- | Returns 'True' if the constructor has no fields.
+    isNullaryCon :: f a -> Bool
 
-instance IsNullary U1 where
-    isNullary _ = True
+instance IsNullaryDataType V1 where
+    isNullaryDataType _ = True
 
-instance IsNullary Par1 where
-    isNullary _ = False
+instance IsNullaryCon U1 where
+    isNullaryCon _ = True
 
-instance IsNullary (K1 i c) where
-    isNullary _ = False
+instance IsNullaryCon Par1 where
+    isNullaryCon _ = False
 
-instance IsNullary f => IsNullary (S1 s f) where
-    isNullary (M1 x) = isNullary x
+instance IsNullaryCon (K1 i c) where
+    isNullaryCon _ = False
 
-instance IsNullary (Rec1 f) where
-    isNullary _ = False
+instance IsNullaryCon f => IsNullaryCon (S1 s f) where
+    isNullaryCon (M1 x) = isNullaryCon x
 
-instance IsNullary (f :*: g) where
-    isNullary _ = False
+instance IsNullaryCon (Rec1 f) where
+    isNullaryCon _ = False
 
-instance IsNullary (f :.: g) where
-    isNullary _ = False
+instance IsNullaryCon (f :*: g) where
+    isNullaryCon _ = False
+
+instance IsNullaryCon (f :.: g) where
+    isNullaryCon _ = False
 
 #if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
-instance IsNullary UChar where
-    isNullary _ = False
+instance IsNullaryCon UChar where
+    isNullaryCon _ = False
 
-instance IsNullary UDouble where
-    isNullary _ = False
+instance IsNullaryCon UDouble where
+    isNullaryCon _ = False
 
-instance IsNullary UFloat where
-    isNullary _ = False
+instance IsNullaryCon UFloat where
+    isNullaryCon _ = False
 
-instance IsNullary UInt where
-    isNullary _ = False
+instance IsNullaryCon UInt where
+    isNullaryCon _ = False
 
-instance IsNullary UWord where
-    isNullary _ = False
+instance IsNullaryCon UWord where
+    isNullaryCon _ = False
 
 # if __GLASGOW_HASKELL__ < 708
 isTrue# :: Bool -> Bool

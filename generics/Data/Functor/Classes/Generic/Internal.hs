@@ -10,6 +10,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 #if __GLASGOW_HASKELL__ >= 708
@@ -76,6 +77,8 @@ module Data.Functor.Classes.Generic.Internal
   , GShow1(..)
   , GShow1Con(..)
   , Show1Args(..)
+    -- * 'FunctorClassesDefault'
+  , FunctorClassesDefault(..)
   -- * Miscellaneous types
   , V4
   , NonV4
@@ -793,6 +796,38 @@ oneHash  opts = if ghc8ShowBehavior opts then showChar   '#'  else id
 twoHash  opts = if ghc8ShowBehavior opts then showString "##" else id
 hashPrec opts = if ghc8ShowBehavior opts then const 0         else id
 #endif
+
+-------------------------------------------------------------------------------
+-- * GenericFunctorClasses
+-------------------------------------------------------------------------------
+
+-- | An adapter newtype, suitable for @DerivingVia@. Its 'Eq1', 'Ord1',
+-- 'Read1', and 'Show1' instances leverage 'Generic1'-based defaults.
+newtype FunctorClassesDefault f a =
+  FunctorClassesDefault { getFunctorClassesDefault :: f a }
+
+#if defined(TRANSFORMERS_FOUR)
+instance (GEq1 V4 (Rep1 f), Generic1 f) => Eq1 (FunctorClassesDefault f) where
+   eq1 (FunctorClassesDefault x) (FunctorClassesDefault y) = eq1Default x y
+instance (GOrd1 V4 (Rep1 f), Generic1 f) => Ord1 (FunctorClassesDefault f) where
+   compare1 (FunctorClassesDefault x) (FunctorClassesDefault y) = compare1Default x y
+instance (GRead1 V4 (Rep1 f), Generic1 f) => Read1 (FunctorClassesDefault f) where
+   readsPrec1 p = coerceFCD (readsPrec1Default p)
+instance (GShow1 V4 (Rep1 f), Generic1 f) => Show1 (FunctorClassesDefault f) where
+   showsPrec1 p (FunctorClassesDefault x) = showsPrec1Default p x
+#else
+instance (GEq1 NonV4 (Rep1 f), Generic1 f) => Eq1 (FunctorClassesDefault f) where
+   liftEq f (FunctorClassesDefault x) (FunctorClassesDefault y) = liftEqDefault f x y
+instance (GOrd1 NonV4 (Rep1 f), Generic1 f) => Ord1 (FunctorClassesDefault f) where
+   liftCompare f (FunctorClassesDefault x) (FunctorClassesDefault y) = liftCompareDefault f x y
+instance (GRead1 NonV4 (Rep1 f), Generic1 f) => Read1 (FunctorClassesDefault f) where
+   liftReadsPrec rp rl p = coerceFCD (liftReadsPrecDefault rp rl p)
+instance (GShow1 NonV4 (Rep1 f), Generic1 f) => Show1 (FunctorClassesDefault f) where
+   liftShowsPrec sp sl p (FunctorClassesDefault x) = liftShowsPrecDefault sp sl p x
+#endif
+
+coerceFCD :: ReadS (f a) -> ReadS (FunctorClassesDefault f a)
+coerceFCD = coerce
 
 -------------------------------------------------------------------------------
 -- * Shared code

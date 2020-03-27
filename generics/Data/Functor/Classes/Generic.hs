@@ -43,6 +43,8 @@ module Data.Functor.Classes.Generic
   , liftShowsPrecDefault
   , liftShowsPrecOptions
 #endif
+    -- * 'GenericFunctorClasses'
+  , FunctorClassesDefault(..)
     -- * Example
     -- $example
   ) where
@@ -52,12 +54,29 @@ import           Data.Functor.Classes.Generic.Internal
 
 #undef MIN_VERSION_transformers
 {- $example
-Note that this module exports different functions depending on which version of
-@transformers@ this library is built against. Here is an example of how to
-use this module correctly:
+The most straightforward way to use the defaults in this module is to use
+@DerivingVia@ on GHC 8.6 or later. For example:
 
 @
-&#123;-&#35; LANGUAGE DeriveGeneric &#35;-&#125;
+&#123;-&#35; LANGUAGE DeriveGeneric, DerivingVia &#35;-&#125;
+
+import Data.Functor.Classes
+import Data.Functor.Classes.Generic
+import GHC.Generics
+
+data Pair a = Pair a a
+  deriving stock Generic1
+  deriving (Eq1, Ord1, Read1, Show1)
+           via FunctorClassesDefault Pair
+@
+
+If using an older version of GHC, then one can also define instances manually.
+This is slightly trickier to accomplish since this module exports different
+functions depending on which version of @transformers@ this library is built
+against. Here is an example of how to define instances manually:
+
+@
+&#123;-&#35; LANGUAGE CPP, DeriveGeneric &#35;-&#125;
 
 import Data.Functor.Classes
 import Data.Functor.Classes.Generic

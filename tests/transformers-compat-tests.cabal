@@ -43,7 +43,7 @@ test-suite spec
   other-modules:        GenericsSpec
                         GenericsTypes
   build-depends:        base             >= 4.3   && < 5
-                      , deriving-compat  >= 0.3.4 && < 1
+                      , deriving-compat  >= 0.4   && < 1
                       , generic-deriving >= 1.10  && < 2
                       , hspec            >= 2     && < 3
                       , QuickCheck       >= 2     && < 3

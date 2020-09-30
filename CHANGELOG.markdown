@@ -1,4 +1,4 @@
-0.6.6 [2020.09.20]
+0.6.6 [2020.09.30]
 ------------------
 * Add `FunctorClassesDefault`, an adapter newtype suitable for `DerivingVia`,
   to `Data.Functor.Classes.Generic`.

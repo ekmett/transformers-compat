@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+0.6.6 [2020.09.20]
+------------------
 * Add `FunctorClassesDefault`, an adapter newtype suitable for `DerivingVia`,
   to `Data.Functor.Classes.Generic`.
 * Fix a bug in which `readsPrec1Default`/`liftReadsPrecDefault` would parse

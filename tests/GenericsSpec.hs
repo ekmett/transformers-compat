@@ -16,21 +16,21 @@ import Text.Read (minPrec)
 main :: IO ()
 main = hspec spec
 
-prop_Eq :: (Eq a, Eq (f a), Eq1 f) => f a -> f a -> Bool
-prop_Eq x y = (x == y) == eq1 x y
+prop_Eq :: (Eq a, Eq (f a), Eq1 f) => f a -> f a -> Expectation
+prop_Eq x y = (x == y) `shouldBe` eq1 x y
 
 eqSpec :: forall f a. (Arbitrary (f a), Show (f a),
                        Eq a, Eq (f a), Eq1 f)
        => Proxy (f a) -> Spec
-eqSpec _ = prop "has a valid Eq1 instance" (prop_Eq :: f a -> f a -> Bool)
+eqSpec _ = prop "has a valid Eq1 instance" (prop_Eq :: f a -> f a -> Expectation)
 
-prop_Ord :: (Ord a, Ord (f a), Ord1 f) => f a -> f a -> Bool
-prop_Ord x y = compare x y == compare1 x y
+prop_Ord :: (Ord a, Ord (f a), Ord1 f) => f a -> f a -> Expectation
+prop_Ord x y = compare x y `shouldBe` compare1 x y
 
 ordSpec :: forall f a. (Arbitrary (f a), Show (f a),
                         Ord a, Ord (f a), Ord1 f)
         => Proxy (f a) -> Spec
-ordSpec _ = prop "has a valid Ord1 instance" (prop_Ord :: f a -> f a -> Bool)
+ordSpec _ = prop "has a valid Ord1 instance" (prop_Ord :: f a -> f a -> Expectation)
 
 -- Adapted from the definition of readEither
 readEither' :: String -> (Int -> ReadS a) -> Either String a
@@ -45,8 +45,8 @@ read' s = either error id . readEither' s
 
 prop_Read :: forall f a. (Read a, Read (f a), Read1 f,
                           Eq (f a), Show (f a))
-          => f a -> Bool
-prop_Read x = readArb readsPrec == readArb readsPrec1
+          => f a -> Expectation
+prop_Read x = readArb readsPrec `shouldBe` readArb readsPrec1
   where
     readArb :: (Int -> ReadS (f a)) -> f a
     readArb = read' (show x)
@@ -54,14 +54,14 @@ prop_Read x = readArb readsPrec == readArb readsPrec1
 readSpec :: forall f a. (Arbitrary (f a), Eq (f a), Show (f a),
                          Read a, Read (f a), Read1 f)
          => Proxy (f a) -> Spec
-readSpec _ = prop "has a valid Read1 instance" (prop_Read :: f a -> Bool)
+readSpec _ = prop "has a valid Read1 instance" (prop_Read :: f a -> Expectation)
 
-prop_Show :: (Show a, Show (f a), Show1 f) => Int -> f a -> Bool
-prop_Show p x = showsPrec p x "" == showsPrec1 p x ""
+prop_Show :: (Show a, Show (f a), Show1 f) => Int -> f a -> Expectation
+prop_Show p x = showsPrec p x "" `shouldBe` showsPrec1 p x ""
 
 showSpec :: forall f a. (Arbitrary (f a), Show a, Show (f a), Show1 f)
          => Proxy (f a) -> Spec
-showSpec _ = prop "has a valid Show1 instance" (prop_Show :: Int -> f a -> Bool)
+showSpec _ = prop "has a valid Show1 instance" (prop_Show :: Int -> f a -> Expectation)
 
 classes1Spec :: forall f a. (Arbitrary (f a),
                              Ord  a, Ord  (f a), Ord1  f,

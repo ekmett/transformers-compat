@@ -3,17 +3,19 @@
 # ifndef HASKELL98
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE StandaloneDeriving #-}
-# if __GLASGOW_HASKELL__ >= 704
-{-# LANGUAGE Safe #-}
-# elif __GLASGOW_HASKELL__ >= 702
-{-# LANGUAGE Trustworthy #-}
-# endif
+{-# LANGUAGE TypeFamilies #-}
 # if __GLASGOW_HASKELL__ >= 706
 {-# LANGUAGE PolyKinds #-}
 # endif
 # if __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE AutoDeriveTypeable #-}
 {-# LANGUAGE DataKinds #-}
+# endif
+# if __GLASGOW_HASKELL__ >= 710
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE Safe #-}
+# elif __GLASGOW_HASKELL__ >= 702
+{-# LANGUAGE Trustworthy #-}
 # endif
 #endif
 -----------------------------------------------------------------------------
@@ -49,7 +51,6 @@ module Control.Monad.Trans.Select (
     mapSelectT,
     -- * Monad transformation
     selectToContT,
-    selectToCont,
     ) where
 
 import Control.Monad.IO.Class
@@ -63,6 +64,14 @@ import Data.Functor.Identity
 
 #if !defined(HASKELL98) && __GLASGOW_HASKELL__ >= 708
 import Data.Typeable
+#endif
+
+#ifndef HASKELL98
+# ifdef GENERIC_DERIVING
+import Generics.Deriving.Base
+# elif __GLASGOW_HASKELL__ >= 702
+import GHC.Generics
+# endif
 #endif
 
 -- | Selection monad.
@@ -84,6 +93,30 @@ runSelect m k = runIdentity (runSelectT m (Identity . k))
 -- 'SelectT' is not a functor on the category of monads, and many operations
 -- cannot be lifted through it.
 newtype SelectT r m a = SelectT ((a -> m r) -> m a)
+
+#ifndef HASKELL98
+# if __GLASGOW_HASKELL__ >= 710
+deriving instance Generic (SelectT r m a)
+# elif __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
+instance Generic (SelectT r m a) where
+  type Rep (SelectT r m a) = D1 D1'SelectT (C1 C1_0'SelectT (S1 NoSelector (Rec0 ((a -> m r) -> m a))))
+  from (SelectT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = SelectT x
+
+instance Datatype D1'SelectT where
+  datatypeName _ = "SelectT"
+  moduleName _ = "Control.Monad.Trans.Select"
+#  if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#  endif
+
+instance Constructor C1_0'SelectT where
+  conName _ = "SelectT"
+
+data D1'SelectT
+data C1_0'SelectT
+# endif
+#endif
 
 -- | Runs a @SelectT@ computation with a function for evaluating answers
 -- to select a particular answer.  (The inverse of 'select'.)
@@ -165,9 +198,3 @@ deriving instance Typeable SelectT
 -- | Convert a selection computation to a continuation-passing computation.
 selectToContT :: (Monad m) => SelectT r m a -> ContT r m a
 selectToContT (SelectT g) = ContT $ \ k -> g k >>= k
-{-# INLINE selectToCont #-}
-
--- | Deprecated name for 'selectToContT'.
-{-# DEPRECATED selectToCont "Use selectToContT instead" #-}
-selectToCont :: (Monad m) => SelectT r m a -> ContT r m a
-selectToCont = selectToContT

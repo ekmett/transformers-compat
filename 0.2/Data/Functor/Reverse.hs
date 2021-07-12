@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP #-}
 
 #ifndef HASKELL98
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 # if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
 # elif __GLASGOW_HASKELL__ >= 702
@@ -40,9 +42,50 @@ import Data.Foldable
 import Data.Traversable
 import Data.Monoid
 
+#ifndef HASKELL98
+# ifdef GENERIC_DERIVING
+import Generics.Deriving.Base
+# elif __GLASGOW_HASKELL__ >= 702
+import GHC.Generics
+# endif
+#endif
+
 -- | The same functor, but with 'Foldable' and 'Traversable' instances
 -- that process the elements in the reverse order.
 newtype Reverse f a = Reverse { getReverse :: f a }
+
+#ifndef HASKELL98
+# if __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
+-- Generic(1) instances for Reverse
+instance Generic (Reverse f a) where
+  type Rep (Reverse f a) = D1 D1'Reverse (C1 C1_0'Reverse (S1 S1_0_0'Reverse (Rec0 (f a))))
+  from (Reverse x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Reverse x
+
+instance Generic1 (Reverse f) where
+  type Rep1 (Reverse f) = D1 D1'Reverse (C1 C1_0'Reverse (S1 S1_0_0'Reverse (Rec1 f)))
+  from1 (Reverse x) = M1 (M1 (M1 (Rec1 x)))
+  to1 (M1 (M1 (M1 x))) = Reverse (unRec1 x)
+
+instance Datatype D1'Reverse where
+  datatypeName _ = "Reverse"
+  moduleName _ = "Data.Functor.Reverse"
+#  if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#  endif
+
+instance Constructor C1_0'Reverse where
+  conName _ = "Reverse"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'Reverse where
+  selName _ = "getReverse"
+
+data D1'Reverse
+data C1_0'Reverse
+data S1_0_0'Reverse
+# endif
+#endif
 
 instance (Eq1 f) => Eq1 (Reverse f) where
     liftEq eq (Reverse x) (Reverse y) = liftEq eq x y
@@ -90,8 +133,10 @@ instance (Monad m) => Monad (Reverse m) where
     {-# INLINE return #-}
     m >>= f = Reverse (getReverse m >>= getReverse . f)
     {-# INLINE (>>=) #-}
+#if !(MIN_VERSION_base(4,13,0))
     fail msg = Reverse (fail msg)
     {-# INLINE fail #-}
+#endif
 
 -- | Derived instance.
 instance (MonadPlus m) => MonadPlus (Reverse m) where

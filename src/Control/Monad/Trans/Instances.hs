@@ -20,6 +20,10 @@
 # if __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE DataKinds #-}
 # endif
+
+# if __GLASGOW_HASKELL__ >= 800
+{-# LANGUAGE DeriveGeneric #-}
+# endif
 #endif
 
 {-# OPTIONS_GHC -fno-warn-deprecations #-}
@@ -52,10 +56,8 @@ import           Control.Monad.IO.Class (MonadIO)
 import           Control.Monad.Trans.Accum (AccumT(..))
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Cont (ContT(..))
-import           Control.Monad.Trans.Error (Error(..), ErrorT(..))
 import           Control.Monad.Trans.Except (ExceptT(..))
 import           Control.Monad.Trans.Identity (IdentityT(..))
-import           Control.Monad.Trans.List (ListT(..), mapListT)
 import           Control.Monad.Trans.Maybe (MaybeT(..))
 import qualified Control.Monad.Trans.RWS.Lazy as Lazy (RWST(..))
 import qualified Control.Monad.Trans.RWS.Strict as Strict (RWST(..))
@@ -85,6 +87,11 @@ import           Data.Monoid (Monoid(..))
 import           Data.String (IsString(fromString))
 import           Data.Traversable (Traversable(..))
 import           Foreign (Storable(..), castPtr)
+
+#if !(MIN_VERSION_transformers(0,6,0))
+import           Control.Monad.Trans.Error (Error(..), ErrorT(..))
+import           Control.Monad.Trans.List (ListT(..), mapListT)
+#endif
 
 #if MIN_VERSION_base(4,4,0)
 import           Control.Monad.Zip (MonadZip(..))
@@ -120,24 +127,11 @@ import           GHC.Generics
 
 #if !(MIN_VERSION_transformers(0,3,0))
 -- Foldable/Traversable instances
-instance (Foldable f) => Foldable (ErrorT e f) where
-    foldMap f (ErrorT a) = foldMap (either (const mempty) f) a
-
-instance (Traversable f) => Traversable (ErrorT e f) where
-    traverse f (ErrorT a) =
-        ErrorT <$> traverse (either (pure . Left) (fmap Right . f)) a
-
 instance (Foldable f) => Foldable (IdentityT f) where
     foldMap f (IdentityT a) = foldMap f a
 
 instance (Traversable f) => Traversable (IdentityT f) where
     traverse f (IdentityT a) = IdentityT <$> traverse f a
-
-instance (Foldable f) => Foldable (ListT f) where
-    foldMap f (ListT a) = foldMap (foldMap f) a
-
-instance (Traversable f) => Traversable (ListT f) where
-    traverse f (ListT a) = ListT <$> traverse (traverse f) a
 
 instance (Foldable f) => Foldable (MaybeT f) where
     foldMap f (MaybeT a) = foldMap (foldMap f) a
@@ -158,6 +152,21 @@ instance (Foldable f) => Foldable (Strict.WriterT w f) where
 instance (Traversable f) => Traversable (Strict.WriterT w f) where
     traverse f = fmap Strict.WriterT . traverse f' . Strict.runWriterT where
        f' (a, b) = fmap (\ c -> (c, b)) (f a)
+
+# if !(MIN_VERSION_transformers(0,6,0))
+instance (Foldable f) => Foldable (ErrorT e f) where
+    foldMap f (ErrorT a) = foldMap (either (const mempty) f) a
+
+instance (Traversable f) => Traversable (ErrorT e f) where
+    traverse f (ErrorT a) =
+        ErrorT <$> traverse (either (pure . Left) (fmap Right . f)) a
+
+instance (Foldable f) => Foldable (ListT f) where
+    foldMap f (ListT a) = foldMap (foldMap f) a
+
+instance (Traversable f) => Traversable (ListT f) where
+    traverse f (ListT a) = ListT <$> traverse (traverse f) a
+# endif
 
 -- MonadFix instances for IdentityT and MaybeT
 instance (MonadFix m) => MonadFix (IdentityT m) where
@@ -219,15 +228,8 @@ instance (Fail.MonadFail m) => Fail.MonadFail (ContT r m) where
     fail msg = ContT $ \ _ -> Fail.fail msg
     {-# INLINE fail #-}
 
-instance (Monad m, Error e) => Fail.MonadFail (ErrorT e m) where
-    fail msg = ErrorT $ return (Left (strMsg msg))
-
 instance (Fail.MonadFail m) => Fail.MonadFail (IdentityT m) where
     fail msg = IdentityT $ Fail.fail msg
-    {-# INLINE fail #-}
-
-instance (Monad m) => Fail.MonadFail (ListT m) where
-    fail _ = ListT $ return []
     {-# INLINE fail #-}
 
 instance (Monad m) => Fail.MonadFail (MaybeT m) where
@@ -262,6 +264,15 @@ instance (Monoid w, Fail.MonadFail m) => Fail.MonadFail (Strict.WriterT w m) whe
     fail msg = Strict.WriterT $ Fail.fail msg
     {-# INLINE fail #-}
 
+# if !(MIN_VERSION_transformers(0,6,0))
+instance (Monad m, Error e) => Fail.MonadFail (ErrorT e m) where
+    fail msg = ErrorT $ return (Left (strMsg msg))
+
+instance (Monad m) => Fail.MonadFail (ListT m) where
+    fail _ = ListT $ return []
+    {-# INLINE fail #-}
+# endif
+
 # if MIN_VERSION_transformers(0,4,0) && !(MIN_VERSION_base(4,9,0))
 instance (Fail.MonadFail m) => Fail.MonadFail (ExceptT e m) where
     fail = ExceptT . Fail.fail
@@ -290,9 +301,6 @@ instance (Monoid a) => Monoid (Constant a b) where
 instance (MonadZip m) => MonadZip (IdentityT m) where
     mzipWith f (IdentityT a) (IdentityT b) = IdentityT (mzipWith f a b)
 
-instance (MonadZip m) => MonadZip (ListT m) where
-    mzipWith f (ListT a) (ListT b) = ListT $ mzipWith (zipWith f) a b
-
 instance (MonadZip m) => MonadZip (MaybeT m) where
     mzipWith f (MaybeT a) (MaybeT b) = MaybeT $ mzipWith (liftA2 f) a b
 
@@ -307,6 +315,11 @@ instance (Monoid w, MonadZip m) => MonadZip (Lazy.WriterT w m) where
 instance (Monoid w, MonadZip m) => MonadZip (Strict.WriterT w m) where
     mzipWith f (Strict.WriterT x) (Strict.WriterT y) = Strict.WriterT $
         mzipWith (\ (a, w) (b, w') -> (f a b, w `mappend` w')) x y
+
+#  if !(MIN_VERSION_transformers(0,6,0))
+instance (MonadZip m) => MonadZip (ListT m) where
+    mzipWith f (ListT a) (ListT b) = ListT $ mzipWith (zipWith f) a b
+#  endif
 
 #  if !(MIN_VERSION_base(4,8,0))
 instance MonadZip Identity where
@@ -336,12 +349,9 @@ instance (Monoid a) => Monoid (Identity a) where
 -- Typeable instances
 #  if __GLASGOW_HASKELL__ >= 708 && __GLASGOW_HASKELL__ < 710
 deriving instance Typeable Backwards
-deriving instance Typeable Constant
 deriving instance Typeable ContT
-deriving instance Typeable ErrorT
 deriving instance Typeable IdentityT
 deriving instance Typeable Lift
-deriving instance Typeable ListT
 deriving instance Typeable MaybeT
 deriving instance Typeable MonadTrans
 deriving instance Typeable Lazy.RWST
@@ -350,6 +360,10 @@ deriving instance Typeable ReaderT
 deriving instance Typeable Reverse
 deriving instance Typeable Lazy.StateT
 deriving instance Typeable Strict.StateT
+#   if !(MIN_VERSION_transformers(0,6,0))
+deriving instance Typeable ErrorT
+deriving instance Typeable ListT
+#   endif
 
 #   if !(MIN_VERSION_base(4,9,0))
 deriving instance Typeable Compose
@@ -605,11 +619,13 @@ instance (Semigroup.Semigroup a) => Semigroup.Semigroup (Constant a b) where
     {-# INLINE (<>) #-}
 # endif
 
+# if !(MIN_VERSION_transformers(0,6,0))
 instance (MonadFix m) => MonadFix (ListT m) where
     mfix f = ListT $ mfix (runListT . f . head) >>= \ xs -> case xs of
         [] -> return []
         x:_ -> liftM (x:) (runListT (mfix (mapListT (liftM tail) . f)))
     {-# INLINE mfix #-}
+# endif
 #endif
 
 -- Generic(1) instances
@@ -748,5 +764,487 @@ instance Constructor MCInR where
 #   endif
 #  endif
 
+# endif
+
+# if !(MIN_VERSION_transformers(0,6,0))
+#  if __GLASGOW_HASKELL__ >= 708
+-- If we wanted to be 100% faithful to the original Data instance in
+-- transformers, we really ought to define an instance like:
+--
+--   instance (Data a, Typeable k, Typeable (b :: k)) => Data (Constant a b)
+--
+-- Unfortunately, this is not possible to do with a standalone-derived Data
+-- instance (see https://gitlab.haskell.org/ghc/ghc/-/issues/13327).
+-- For now, I've opted to just restrict the instance context slightly by using
+-- a `Data b` constraint. I'll wait for someone to complain about this before
+-- taking further action on it.
+deriving instance (Data a, Data b) => Data (Constant a b)
+#   if __GLASGOW_HASKELL__ < 710
+deriving instance Typeable Constant
+#   endif
+#  endif
+
+-- The use of GHC 8.0 in this CPP is a conservative lower bound for
+-- determining the earliest version of GHC that can derive Generic(1)
+-- instances for all data types without bugs. We might be able to pick
+-- an earlier GHC version for certain data types, but it doesn't seem
+-- worthwhile, given that we'll have to fall back on hand-written instances at
+-- some point anyway.
+#  if __GLASGOW_HASKELL__ >= 800
+
+deriving instance Generic  (Constant a b)
+deriving instance Generic1 (Constant a)
+
+deriving instance Generic (ContT r m a)
+
+deriving instance Generic  (IdentityT f a)
+deriving instance Generic1 (IdentityT f)
+
+deriving instance Generic (MaybeT m a)
+deriving instance Functor m => Generic1 (MaybeT m)
+
+deriving instance Generic (Lazy.RWST   r w s m a)
+deriving instance Generic (Strict.RWST r w s m a)
+
+deriving instance Generic  (ReaderT r m a)
+deriving instance Generic1 (ReaderT r m)
+
+deriving instance Generic (Lazy.StateT   s m a)
+deriving instance Generic (Strict.StateT s m a)
+
+deriving instance Generic (Lazy.WriterT   w m a)
+deriving instance Generic (Strict.WriterT w m a)
+
+#   if MIN_VERSION_transformers(0,3,0)
+deriving instance Generic  (Backwards f a)
+deriving instance Generic1 (Backwards f)
+
+deriving instance Generic  (Lift f a)
+deriving instance Generic1 (Lift f)
+
+deriving instance Generic  (Reverse f a)
+deriving instance Generic1 (Reverse f)
+#   endif
+
+#   if MIN_VERSION_transformers(0,4,0)
+deriving instance Generic (ExceptT e m a)
+deriving instance Functor m => Generic1 (ExceptT e m)
+#   endif
+
+#   if MIN_VERSION_transformers(0,5,3)
+deriving instance Generic (AccumT  w m a)
+deriving instance Generic (SelectT w m a)
+#   endif
+
+#  elif __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
+
+instance Generic (Constant a b) where
+  type Rep (Constant a b) = D1 D1'Constant (C1 C1_0'Constant (S1 S1_0_0'Constant (Rec0 a)))
+  from (Constant x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Constant x
+
+instance Generic1 (Constant a) where
+  type Rep1 (Constant a) = D1 D1'Constant (C1 C1_0'Constant (S1 S1_0_0'Constant (Rec0 a)))
+  from1 (Constant x) = M1 (M1 (M1 (K1 x)))
+  to1 (M1 (M1 (M1 x))) = Constant (unK1 x)
+
+instance Datatype D1'Constant where
+  datatypeName _ = "Constant"
+  moduleName _ = "Data.Functor.Constant"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'Constant where
+  conName _ = "Constant"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'Constant where
+  selName _ = "getConstant"
+
+data D1'Constant
+data C1_0'Constant
+data S1_0_0'Constant
+
+-----
+
+instance Generic (ContT r m a) where
+  type Rep (ContT r m a) = D1 D1'ContT (C1 C1_0'ContT (S1 S1_0_0'ContT (Rec0 ((a -> m r) -> m r))))
+  from (ContT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = ContT x
+
+instance Datatype D1'ContT where
+  datatypeName _ = "ContT"
+  moduleName _ = "Control.Monad.Trans.Cont"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'ContT where
+  conName _ = "ContT"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'ContT where
+  selName _ = "runContT"
+
+data D1'ContT
+data C1_0'ContT
+data S1_0_0'ContT
+
+-----
+
+instance Generic (IdentityT f a) where
+  type Rep (IdentityT f a) = D1 D1'IdentityT (C1 C1_0'IdentityT (S1 S1_0_0'IdentityT (Rec0 (f a))))
+  from (IdentityT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = IdentityT x
+
+instance Generic1 (IdentityT f) where
+  type Rep1 (IdentityT f) = D1 D1'IdentityT (C1 C1_0'IdentityT (S1 S1_0_0'IdentityT (Rec1 f)))
+  from1 (IdentityT x) = M1 (M1 (M1 (Rec1 x)))
+  to1 (M1 (M1 (M1 x))) = IdentityT (unRec1 x)
+
+instance Datatype D1'IdentityT where
+  datatypeName _ = "IdentityT"
+  moduleName _ = "Control.Monad.Trans.Identity"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'IdentityT where
+  conName _ = "IdentityT"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'IdentityT where
+  selName _ = "runIdentityT"
+
+data D1'IdentityT
+data C1_0'IdentityT
+data S1_0_0'IdentityT
+
+-----
+
+instance Generic (MaybeT m a) where
+  type Rep (MaybeT m a) = D1 D1'MaybeT (C1 C1_0'MaybeT (S1 S1_0_0'MaybeT (Rec0 (m (Maybe a)))))
+  from (MaybeT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = MaybeT x
+
+instance Functor m => Generic1 (MaybeT m) where
+  type Rep1 (MaybeT m) = D1 D1'MaybeT (C1 C1_0'MaybeT (S1 S1_0_0'MaybeT (m :.: Rec1 Maybe)))
+  from1 (MaybeT x) = M1 (M1 (M1 ((.) Comp1 (fmap Rec1) x)))
+  to1 (M1 (M1 (M1 x))) = MaybeT ((.) (fmap unRec1) unComp1 x)
+
+instance Datatype D1'MaybeT where
+  datatypeName _ = "MaybeT"
+  moduleName _ = "Control.Monad.Trans.Maybe"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'MaybeT where
+  conName _ = "MaybeT"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'MaybeT where
+  selName _ = "runMaybeT"
+
+data D1'MaybeT
+data C1_0'MaybeT
+data S1_0_0'MaybeT
+
+-----
+
+instance Generic (Lazy.RWST r w s m a) where
+  type Rep (Lazy.RWST r w s m a) = D1 D1'RWSTLazy (C1 C1_0'RWST (S1 S1_0_0'RWST (Rec0 (r -> s -> m (a, s, w)))))
+  from (Lazy.RWST x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Lazy.RWST x
+
+instance Generic (Strict.RWST r w s m a) where
+  type Rep (Strict.RWST r w s m a) = D1 D1'RWSTStrict (C1 C1_0'RWST (S1 S1_0_0'RWST (Rec0 (r -> s -> m (a, s, w)))))
+  from (Strict.RWST x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Strict.RWST x
+
+instance Datatype D1'RWSTLazy where
+  datatypeName _ = "RWST"
+  moduleName _ = "Control.Monad.Trans.RWS.Lazy"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Datatype D1'RWSTStrict where
+  datatypeName _ = "RWST"
+  moduleName _ = "Control.Monad.Trans.RWS.Strict"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'RWST where
+  conName _ = "RWST"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'RWST where
+  selName _ = "runRWST"
+
+data D1'RWSTLazy
+data D1'RWSTStrict
+data C1_0'RWST
+data S1_0_0'RWST
+
+-----
+
+instance Generic (ReaderT r m a) where
+  type Rep (ReaderT r m a) = D1 D1'ReaderT (C1 C1_0'ReaderT (S1 S1_0_0'ReaderT (Rec0 (r -> m a))))
+  from (ReaderT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = ReaderT x
+
+instance Datatype D1'ReaderT where
+  datatypeName _ = "ReaderT"
+  moduleName _ = "Control.Monad.Trans.Reader"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'ReaderT where
+  conName _ = "ReaderT"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'ReaderT where
+  selName _ = "runReaderT"
+
+data D1'ReaderT
+data C1_0'ReaderT
+data S1_0_0'ReaderT
+
+-----
+
+instance Generic (Lazy.StateT s m a) where
+  type Rep (Lazy.StateT s m a) = D1 D1'StateTLazy (C1 C1_0'StateT (S1 S1_0_0'StateT (Rec0 (s -> m (a, s)))))
+  from (Lazy.StateT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Lazy.StateT x
+
+instance Generic (Strict.StateT s m a) where
+  type Rep (Strict.StateT s m a) = D1 D1'StateTStrict (C1 C1_0'StateT (S1 S1_0_0'StateT (Rec0 (s -> m (a, s)))))
+  from (Strict.StateT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Strict.StateT x
+
+instance Datatype D1'StateTLazy where
+  datatypeName _ = "StateT"
+  moduleName _ = "Control.Monad.Trans.State.Lazy"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Datatype D1'StateTStrict where
+  datatypeName _ = "StateT"
+  moduleName _ = "Control.Monad.Trans.State.Strict"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'StateT where
+  conName _ = "StateT"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'StateT where
+  selName _ = "runStateT"
+
+data D1'StateTLazy
+data D1'StateTStrict
+data C1_0'StateT
+data S1_0_0'StateT
+
+-----
+
+instance Generic (Lazy.WriterT w m a) where
+  type Rep (Lazy.WriterT w m a) = D1 D1'WriterTLazy (C1 C1_0'WriterT (S1 S1_0_0'WriterT (Rec0 (m (a, w)))))
+  from (Lazy.WriterT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Lazy.WriterT x
+
+instance Generic (Strict.WriterT w m a) where
+  type Rep (Strict.WriterT w m a) = D1 D1'WriterTStrict (C1 C1_0'WriterT (S1 S1_0_0'WriterT (Rec0 (m (a, w)))))
+  from (Strict.WriterT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Strict.WriterT x
+
+instance Datatype D1'WriterTLazy where
+  datatypeName _ = "WriterT"
+  moduleName _ = "Control.Monad.Trans.Writer.Lazy"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Datatype D1'WriterTStrict where
+  datatypeName _ = "WriterT"
+  moduleName _ = "Control.Monad.Trans.Writer.Strict"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'WriterT where
+  conName _ = "WriterT"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'WriterT where
+  selName _ = "runWriterT"
+
+data D1'WriterTLazy
+data D1'WriterTStrict
+data C1_0'WriterT
+data S1_0_0'WriterT
+
+#   if MIN_VERSION_transformers(0,3,0)
+instance Generic (Backwards f a) where
+  type Rep (Backwards f a) = D1 D1'Backwards (C1 C1_0'Backwards (S1 S1_0_0'Backwards (Rec0 (f a))))
+  from (Backwards x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Backwards x
+
+instance Generic1 (Backwards f) where
+  type Rep1 (Backwards f) = D1 D1'Backwards (C1 C1_0'Backwards (S1 S1_0_0'Backwards (Rec1 f)))
+  from1 (Backwards x) = M1 (M1 (M1 (Rec1 x)))
+  to1 (M1 (M1 (M1 x))) = Backwards (unRec1 x)
+
+instance Datatype D1'Backwards where
+  datatypeName _ = "Backwards"
+  moduleName _ = "Control.Applicative.Backwards"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'Backwards where
+  conName _ = "Backwards"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'Backwards where
+  selName _ = "forwards"
+
+data D1'Backwards
+data C1_0'Backwards
+data S1_0_0'Backwards
+
+-----
+
+instance Generic (Reverse f a) where
+  type Rep (Reverse f a) = D1 D1'Reverse (C1 C1_0'Reverse (S1 S1_0_0'Reverse (Rec0 (f a))))
+  from (Reverse x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = Reverse x
+
+instance Generic1 (Reverse f) where
+  type Rep1 (Reverse f) = D1 D1'Reverse (C1 C1_0'Reverse (S1 S1_0_0'Reverse (Rec1 f)))
+  from1 (Reverse x) = M1 (M1 (M1 (Rec1 x)))
+  to1 (M1 (M1 (M1 x))) = Reverse (unRec1 x)
+
+instance Datatype D1'Reverse where
+  datatypeName _ = "Reverse"
+  moduleName _ = "Data.Functor.Reverse"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'Reverse where
+  conName _ = "Reverse"
+  conIsRecord _ = True
+
+instance Selector S1_0_0'Reverse where
+  selName _ = "getReverse"
+
+data D1'Reverse
+data C1_0'Reverse
+data S1_0_0'Reverse
+
+-----
+
+instance Generic (Lift f a) where
+  type Rep (Lift f a) = D1 D1'Lift (C1 C1_0'Lift (S1 NoSelector (Rec0 a)) :+: C1 C1_1'Lift (S1 NoSelector (Rec0 (f a))))
+  from (Pure x) = M1 (L1 (M1 (M1 (K1 x))))
+  from (Other x) = M1 (R1 (M1 (M1 (K1 x))))
+  to (M1 (L1 (M1 (M1 (K1 x))))) = Pure x
+  to (M1 (R1 (M1 (M1 (K1 x))))) = Other x
+
+instance Generic1 (Lift f) where
+  type Rep1 (Lift f) = D1 D1'Lift (C1 C1_0'Lift (S1 NoSelector Par1) :+: C1 C1_1'Lift (S1 NoSelector (Rec1 f)))
+  from1 (Pure x) = M1 (L1 (M1 (M1 (Par1 x))))
+  from1 (Other x) = M1 (R1 (M1 (M1 (Rec1 x))))
+  to1 (M1 (L1 (M1 (M1 x)))) = Pure (unPar1 x)
+  to1 (M1 (R1 (M1 (M1 x)))) = Other (unRec1 x)
+
+instance Datatype D1'Lift where
+  datatypeName _ = "Lift"
+  moduleName _ = "Control.Applicative.Lift"
+
+instance Constructor C1_0'Lift where
+  conName _ = "Pure"
+
+instance Constructor C1_1'Lift where
+  conName _ = "Other"
+
+data D1'Lift
+data C1_0'Lift
+data C1_1'Lift
+#   endif
+
+#   if MIN_VERSION_transformers(0,4,0)
+instance Generic (ExceptT e m a) where
+  type Rep (ExceptT e m a) = D1 D1'ExceptT (C1 C1_0'ExceptT (S1 NoSelector (Rec0 (m (Either e a)))))
+  from (ExceptT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = ExceptT x
+
+instance Functor m => Generic1 (ExceptT e m) where
+  type Rep1 (ExceptT e m) = D1 D1'ExceptT (C1 C1_0'ExceptT (S1 NoSelector (m :.: Rec1 (Either e))))
+  from1 (ExceptT x) = M1 (M1 (M1 ((.) Comp1 (fmap Rec1) x)))
+  to1 (M1 (M1 (M1 x))) = ExceptT ((.) (fmap unRec1) unComp1 x)
+
+instance Datatype D1'ExceptT where
+  datatypeName _ = "ExceptT"
+  moduleName _ = "Control.Monad.Trans.Except"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'ExceptT where
+  conName _ = "ExceptT"
+
+data D1'ExceptT
+data C1_0'ExceptT
+#   endif
+
+#   if MIN_VERSION_transformers(0,5,3)
+instance Generic (AccumT w m a) where
+  type Rep (AccumT w m a) = D1 D1'AccumT (C1 C1_0'AccumT (S1 NoSelector (Rec0 (w -> m (a, w)))))
+  from (AccumT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = AccumT x
+
+instance Datatype D1'AccumT where
+  datatypeName _ = "AccumT"
+  moduleName _ = "Control.Monad.Trans.Accum"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'AccumT where
+  conName _ = "AccumT"
+
+data D1'AccumT
+data C1_0'AccumT
+
+-----
+
+instance Generic (SelectT r m a) where
+  type Rep (SelectT r m a) = D1 D1'SelectT (C1 C1_0'SelectT (S1 NoSelector (Rec0 ((a -> m r) -> m a))))
+  from (SelectT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = SelectT x
+
+instance Datatype D1'SelectT where
+  datatypeName _ = "SelectT"
+  moduleName _ = "Control.Monad.Trans.Select"
+#    if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#    endif
+
+instance Constructor C1_0'SelectT where
+  conName _ = "SelectT"
+
+data D1'SelectT
+data C1_0'SelectT
+#   endif
+
+#  endif
 # endif
 #endif

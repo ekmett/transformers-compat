@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP #-}
 
 #ifndef HASKELL98
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 # if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
 # elif __GLASGOW_HASKELL__ >= 702
@@ -42,9 +44,50 @@ import Data.Functor.Constant
 import Data.Monoid (Monoid(..))
 import Data.Traversable (Traversable(traverse))
 
+#ifndef HASKELL98
+# ifdef GENERIC_DERIVING
+import Generics.Deriving.Base
+# elif __GLASGOW_HASKELL__ >= 702
+import GHC.Generics
+# endif
+#endif
+
 -- | Applicative functor formed by adding pure computations to a given
 -- applicative functor.
 data Lift f a = Pure a | Other (f a)
+
+#ifndef HASKELL98
+# if __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
+-- Generic(1) instances for Lift
+instance Generic (Lift f a) where
+  type Rep (Lift f a) = D1 D1'Lift (C1 C1_0'Lift (S1 NoSelector (Rec0 a)) :+: C1 C1_1'Lift (S1 NoSelector (Rec0 (f a))))
+  from (Pure x) = M1 (L1 (M1 (M1 (K1 x))))
+  from (Other x) = M1 (R1 (M1 (M1 (K1 x))))
+  to (M1 (L1 (M1 (M1 (K1 x))))) = Pure x
+  to (M1 (R1 (M1 (M1 (K1 x))))) = Other x
+
+instance Generic1 (Lift f) where
+  type Rep1 (Lift f) = D1 D1'Lift (C1 C1_0'Lift (S1 NoSelector Par1) :+: C1 C1_1'Lift (S1 NoSelector (Rec1 f)))
+  from1 (Pure x) = M1 (L1 (M1 (M1 (Par1 x))))
+  from1 (Other x) = M1 (R1 (M1 (M1 (Rec1 x))))
+  to1 (M1 (L1 (M1 (M1 x)))) = Pure (unPar1 x)
+  to1 (M1 (R1 (M1 (M1 x)))) = Other (unRec1 x)
+
+instance Datatype D1'Lift where
+  datatypeName _ = "Lift"
+  moduleName _ = "Control.Applicative.Lift"
+
+instance Constructor C1_0'Lift where
+  conName _ = "Pure"
+
+instance Constructor C1_1'Lift where
+  conName _ = "Other"
+
+data D1'Lift
+data C1_0'Lift
+data C1_1'Lift
+# endif
+#endif
 
 instance (Eq1 f) => Eq1 (Lift f) where
     liftEq eq (Pure x1) (Pure x2) = eq x1 x2
@@ -94,10 +137,8 @@ instance (Traversable f) => Traversable (Lift f) where
 instance (Applicative f) => Applicative (Lift f) where
     pure = Pure
     {-# INLINE pure #-}
-    Pure f <*> Pure x = Pure (f x)
-    Pure f <*> Other y = Other (f <$> y)
-    Other f <*> Pure x = Other (($ x) <$> f)
-    Other f <*> Other y = Other (f <*> y)
+    Pure f <*> ax = f <$> ax
+    Other f <*> ax = Other (f <*> unLift ax)
     {-# INLINE (<*>) #-}
 
 -- | A combination is 'Pure' only either part is.
@@ -134,8 +175,9 @@ elimLift _ g (Other e) = g e
 
 -- | An applicative functor that collects a monoid (e.g. lists) of errors.
 -- A sequence of computations fails if any of its components do, but
--- unlike monads made with 'ExceptT' from "Control.Monad.Trans.Except",
--- these computations continue after an error, collecting all the errors.
+-- unlike monads made with 'Control.Monad.Trans.Except.ExceptT' from
+-- "Control.Monad.Trans.Except", these computations continue after an
+-- error, collecting all the errors.
 --
 -- * @'pure' f '<*>' 'pure' x = 'pure' (f x)@
 --

@@ -1,4 +1,4 @@
-0.7 [????.??.??]
+0.7 [2021.07.25]
 ----------------
 * Backport changes from `transformers-0.6.*`:
   * Remove the long-deprecated `selectToCont` function from

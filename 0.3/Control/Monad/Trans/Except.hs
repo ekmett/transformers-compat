@@ -8,14 +8,18 @@
 #define MIN_VERSION_mtl(x,y,z) 1
 #endif
 
-#ifdef MTL
+#ifndef HASKELL98
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+# ifdef MTL
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
-# if __GLASGOW_HASKELL__ >= 704
+#  if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE Safe #-}
-# elif __GLASGOW_HASKELL__ >= 702
+#  elif __GLASGOW_HASKELL__ >= 702
 {-# LANGUAGE Trustworthy #-}
+#  endif
 # endif
 #endif
 -----------------------------------------------------------------------------
@@ -54,6 +58,9 @@ module Control.Monad.Trans.Except (
     -- * Exception operations
     throwE,
     catchE,
+    handleE,
+    tryE,
+    finallyE,
     -- * Lifting other operations
     liftCallCC,
     liftListen,
@@ -85,6 +92,14 @@ import Data.Functor.Classes
 import Data.Functor.Identity
 import Data.Monoid
 import Data.Traversable (Traversable(traverse))
+
+#ifndef HASKELL98
+# ifdef GENERIC_DERIVING
+import Generics.Deriving.Base
+# elif __GLASGOW_HASKELL__ >= 702
+import GHC.Generics
+# endif
+#endif
 
 -- | The parameterizable exception monad.
 --
@@ -133,6 +148,34 @@ withExcept = withExceptT
 -- value, while @>>=@ sequences two subcomputations, exiting on the
 -- first exception.
 newtype ExceptT e m a = ExceptT { runExceptT :: m (Either e a) }
+
+#ifndef HASKELL98
+# if __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
+-- Generic(1) instances for ExceptT
+instance Generic (ExceptT e m a) where
+  type Rep (ExceptT e m a) = D1 D1'ExceptT (C1 C1_0'ExceptT (S1 NoSelector (Rec0 (m (Either e a)))))
+  from (ExceptT x) = M1 (M1 (M1 (K1 x)))
+  to (M1 (M1 (M1 (K1 x)))) = ExceptT x
+
+instance Functor m => Generic1 (ExceptT e m) where
+  type Rep1 (ExceptT e m) = D1 D1'ExceptT (C1 C1_0'ExceptT (S1 NoSelector (m :.: Rec1 (Either e))))
+  from1 (ExceptT x) = M1 (M1 (M1 ((.) Comp1 (fmap Rec1) x)))
+  to1 (M1 (M1 (M1 x))) = ExceptT ((.) (fmap unRec1) unComp1 x)
+
+instance Datatype D1'ExceptT where
+  datatypeName _ = "ExceptT"
+  moduleName _ = "Control.Monad.Trans.Except"
+#  if MIN_VERSION_base(4,7,0)
+  isNewtype _ = True
+#  endif
+
+instance Constructor C1_0'ExceptT where
+  conName _ = "ExceptT"
+
+data D1'ExceptT
+data C1_0'ExceptT
+# endif
+#endif
 
 instance (Eq e, Eq1 m) => Eq1 (ExceptT e m) where
     liftEq eq (ExceptT x) (ExceptT y) = liftEq (liftEq eq) x y
@@ -227,8 +270,10 @@ instance (Monad m) => Monad (ExceptT e m) where
             Left e -> return (Left e)
             Right x -> runExceptT (k x)
     {-# INLINE (>>=) #-}
+#if !(MIN_VERSION_base(4,13,0))
     fail = ExceptT . fail
     {-# INLINE fail #-}
+#endif
 
 instance (Fail.MonadFail m) => Fail.MonadFail (ExceptT e m) where
     fail = ExceptT . Fail.fail
@@ -288,6 +333,29 @@ m `catchE` h = ExceptT $ do
         Left  l -> runExceptT (h l)
         Right r -> return (Right r)
 {-# INLINE catchE #-}
+
+-- | The same as @'flip' 'catchE'@, which is useful in situations where
+-- the code for the handler is shorter.
+handleE :: Monad m => (e -> ExceptT e' m a) -> ExceptT e m a -> ExceptT e' m a
+handleE = flip catchE
+{-# INLINE handleE #-}
+
+-- | Similar to 'catchE', but returns an 'Either' result which is
+-- @('Right' a)@ if no exception was thown, or @('Left' ex)@ if an
+-- exception @ex@ was thrown.
+tryE :: Monad m => ExceptT e m a -> ExceptT e m (Either e a)
+tryE m = catchE (liftM Right m) (return . Left)
+{-# INLINE tryE #-}
+
+-- | @'finallyE' a b@ executes computation @a@ followed by computation @b@,
+-- even if @a@ exits early by throwing an exception.  In the latter case,
+-- the exception is re-thrown after @b@ has been executed.
+finallyE :: Monad m => ExceptT e m a -> ExceptT e m () -> ExceptT e m a
+finallyE m closer = do
+    res <- tryE m
+    closer
+    either throwE return res
+{-# INLINE finallyE #-}
 
 -- | Lift a @callCC@ operation to the new monad.
 liftCallCC :: CallCC m (Either e a) (Either e b) -> CallCC (ExceptT e m) a b

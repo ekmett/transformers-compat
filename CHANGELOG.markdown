@@ -1,3 +1,14 @@
+0.7 [????.??.??]
+----------------
+* Backport changes from `transformers-0.6.*`:
+  * Remove the long-deprecated `selectToCont` function from
+    `Control.Monad.Trans.Select`.
+  * Backport various `Generic`, `Generic1`, and `Data` instances.
+  * Backport `handleE`, `tryE`, and `finallyE` to `Control.Monad.Trans.Except`.
+  * Backport explicit implementations of `(<$)`, `liftA2`, `(*>)`, and `(<*)`
+    for `Control.Applicative.Backwards`.
+  * Backport a lazier implementation of `(<*>)` for `Control.Applicative.Lift`.
+
 0.6.6 [2020.09.30]
 ------------------
 * Add `FunctorClassesDefault`, an adapter newtype suitable for `DerivingVia`,

@@ -1,3 +1,10 @@
+0.7.1 [yyyy.mm.dd]
+------------------
+* Backport new instances from GHC 9.2/`base-4.16`
+  * `Eq1`, `Read1`, and `Show1` instances for `Complex`
+  * `Eq{1,2}`, `Ord{1,2}`, `Show{1,2}`, and `Read{1,2}` instances for `(,,)`
+     and `(,,,)`
+
 0.7 [2021.07.25]
 ----------------
 * Backport changes from `transformers-0.6.*`:

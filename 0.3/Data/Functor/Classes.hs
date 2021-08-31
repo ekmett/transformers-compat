@@ -92,12 +92,14 @@ import Control.Monad.Trans.Writer.Strict as Strict
 import Data.Functor.Compose
 import Data.Functor.Constant
 import Data.Functor.Product
+import Data.Complex (Complex (..))
 
 #if MIN_VERSION_transformers(0,3,0)
 import Control.Applicative.Lift
 import Control.Applicative.Backwards
 import Data.Functor.Reverse
 #endif
+
 
 #ifndef HASKELL98
 # if __GLASGOW_HASKELL__ >= 708
@@ -829,6 +831,110 @@ deriving instance Typeable Show1
 deriving instance Typeable Show2
 # endif
 #endif
+
+#if MIN_VERSION_base(4,4,0)
+instance Eq1 Complex where
+    liftEq eq (x :+ y) (u :+ v) = eq x u && eq y v
+
+instance Read1 Complex where
+    liftReadsPrec rdP _ p s = readParen (p > complexPrec) (\s' -> do
+      (x, s'')     <- rdP (complexPrec+1) s'
+      (":+", s''') <- lex s''
+      (y, s'''')   <- rdP (complexPrec+1) s'''
+      return (x :+ y, s'''')) s
+      where
+        complexPrec = 6
+
+instance Show1 Complex where
+    liftShowsPrec sp _ d (x :+ y) = showParen (d > complexPrec) $
+        sp (complexPrec+1) x . showString " :+ " . sp (complexPrec+1) y
+      where
+        complexPrec = 6
+#endif
+
+instance Eq a => Eq2 ((,,) a) where
+    liftEq2 e1 e2 (u1, x1, y1) (v1, x2, y2) =
+        u1 == v1 &&
+        e1 x1 x2 && e2 y1 y2
+
+instance Ord a => Ord2 ((,,) a) where
+    liftCompare2 comp1 comp2 (u1, x1, y1) (v1, x2, y2) =
+        compare u1 v1 `mappend`
+        comp1 x1 x2 `mappend` comp2 y1 y2
+
+instance Read a => Read2 ((,,) a) where
+    liftReadsPrec2 rp1 _ rp2 _ _ = readParen False $ \ r ->
+        [((e1,e2,e3), y) | ("(",s) <- lex r,
+                           (e1,t)  <- readsPrec 0 s,
+                           (",",u) <- lex t,
+                           (e2,v)  <- rp1 0 u,
+                           (",",w) <- lex v,
+                           (e3,x)  <- rp2 0 w,
+                           (")",y) <- lex x]
+
+instance Show a => Show2 ((,,) a) where
+    liftShowsPrec2 sp1 _ sp2 _ _ (x1,y1,y2)
+        = showChar '(' . showsPrec 0 x1
+        . showChar ',' . sp1 0 y1
+        . showChar ',' . sp2 0 y2
+        . showChar ')'
+
+instance (Eq a, Eq b) => Eq1 ((,,) a b) where
+    liftEq = liftEq2 (==)
+
+instance (Ord a, Ord b) => Ord1 ((,,) a b) where
+    liftCompare = liftCompare2 compare
+
+instance (Read a, Read b) => Read1 ((,,) a b) where
+    liftReadsPrec = liftReadsPrec2 readsPrec readList
+
+instance (Show a, Show b) => Show1 ((,,) a b) where
+    liftShowsPrec = liftShowsPrec2 showsPrec showList
+
+instance (Eq a, Eq b) => Eq2 ((,,,) a b) where
+    liftEq2 e1 e2 (u1, u2, x1, y1) (v1, v2, x2, y2) =
+        u1 == v1 &&
+        u2 == v2 &&
+        e1 x1 x2 && e2 y1 y2
+
+instance (Ord a, Ord b) => Ord2 ((,,,) a b) where
+    liftCompare2 comp1 comp2 (u1, u2, x1, y1) (v1, v2, x2, y2) =
+        compare u1 v1 `mappend`
+        compare u2 v2 `mappend`
+        comp1 x1 x2 `mappend` comp2 y1 y2
+
+instance (Read a, Read b) => Read2 ((,,,) a b) where
+    liftReadsPrec2 rp1 _ rp2 _ _ = readParen False $ \ r ->
+        [((e1,e2,e3,e4), s9) | ("(",s1) <- lex r,
+                               (e1,s2)  <- readsPrec 0 s1,
+                               (",",s3) <- lex s2,
+                               (e2,s4)  <- readsPrec 0 s3,
+                               (",",s5) <- lex s4,
+                               (e3,s6)  <- rp1 0 s5,
+                               (",",s7) <- lex s6,
+                               (e4,s8)  <- rp2 0 s7,
+                               (")",s9) <- lex s8]
+
+instance (Show a, Show b) => Show2 ((,,,) a b) where
+    liftShowsPrec2 sp1 _ sp2 _ _ (x1,x2,y1,y2)
+        = showChar '(' . showsPrec 0 x1
+        . showChar ',' . showsPrec 0 x2
+        . showChar ',' . sp1 0 y1
+        . showChar ',' . sp2 0 y2
+        . showChar ')'
+
+instance (Eq a, Eq b, Eq c) => Eq1 ((,,,) a b c) where
+    liftEq = liftEq2 (==)
+
+instance (Ord a, Ord b, Ord c) => Ord1 ((,,,) a b c) where
+    liftCompare = liftCompare2 compare
+
+instance (Read a, Read b, Read c) => Read1 ((,,,) a b c) where
+    liftReadsPrec = liftReadsPrec2 readsPrec readList
+
+instance (Show a, Show b, Show c) => Show1 ((,,,) a b c) where
+    liftShowsPrec = liftShowsPrec2 showsPrec showList
+
 
 {- $example
 These functions can be used to assemble 'Read' and 'Show' instances for

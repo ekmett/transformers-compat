@@ -1,4 +1,4 @@
-0.7.1 [yyyy.mm.dd]
+0.7.1 [2021.10.30]
 ------------------
 * Backport new instances from GHC 9.2/`base-4.16`
   * `Eq1`, `Read1`, and `Show1` instances for `Complex`

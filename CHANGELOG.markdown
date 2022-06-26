@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+0.7.2 [2022.06.26]
+------------------
 * Add `Eq`, `Ord`, `Read`, and `Show` instances for `FunctorClassesDefault` in
   `Data.Functor.Classes.Generic`.
 

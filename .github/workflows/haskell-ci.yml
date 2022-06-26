@@ -8,9 +8,9 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.13.20211030
+# version: 0.14.3
 #
-# REGENDATA ("0.13.20211030",["github","cabal.project"])
+# REGENDATA ("0.14.3",["github","cabal.project"])
 #
 name: Haskell-CI
 on:
@@ -20,6 +20,8 @@ jobs:
   linux:
     name: Haskell-CI - Linux - ${{ matrix.compiler }}
     runs-on: ubuntu-18.04
+    timeout-minutes:
+      60
     container:
       image: buildpack-deps:bionic
     continue-on-error: ${{ matrix.allow-failure }}
@@ -104,7 +106,7 @@ jobs:
           apt-get install -y --no-install-recommends gnupg ca-certificates dirmngr curl git software-properties-common libtinfo5
           if [ "${{ matrix.setup-method }}" = ghcup ]; then
             mkdir -p "$HOME/.ghcup/bin"
-            curl -sL https://downloads.haskell.org/ghcup/0.1.17.3/x86_64-linux-ghcup-0.1.17.3 > "$HOME/.ghcup/bin/ghcup"
+            curl -sL https://downloads.haskell.org/ghcup/0.1.17.5/x86_64-linux-ghcup-0.1.17.5 > "$HOME/.ghcup/bin/ghcup"
             chmod a+x "$HOME/.ghcup/bin/ghcup"
             "$HOME/.ghcup/bin/ghcup" install ghc "$HCVER"
             "$HOME/.ghcup/bin/ghcup" install cabal 3.6.2.0
@@ -113,7 +115,7 @@ jobs:
             apt-get update
             apt-get install -y "$HCNAME"
             mkdir -p "$HOME/.ghcup/bin"
-            curl -sL https://downloads.haskell.org/ghcup/0.1.17.3/x86_64-linux-ghcup-0.1.17.3 > "$HOME/.ghcup/bin/ghcup"
+            curl -sL https://downloads.haskell.org/ghcup/0.1.17.5/x86_64-linux-ghcup-0.1.17.5 > "$HOME/.ghcup/bin/ghcup"
             chmod a+x "$HOME/.ghcup/bin/ghcup"
             "$HOME/.ghcup/bin/ghcup" install cabal 3.6.2.0
           fi
@@ -174,6 +176,13 @@ jobs:
             prefix: $CABAL_DIR
           repository hackage.haskell.org
             url: http://hackage.haskell.org/
+          EOF
+          cat >> $CABAL_CONFIG <<EOF
+          jobs: 2
+          EOF
+          cat >> $CABAL_CONFIG <<EOF
+          program-default-options
+            ghc-options: $GHCJOBS +RTS -M3G -RTS
           EOF
           cat $CABAL_CONFIG
       - name: versions
@@ -265,37 +274,28 @@ jobs:
           rm -f cabal.project.local
       - name: constraint set transformers-newer
         run: |
-          if [ $((HCNUMVER < 80600)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers >=0.5.5.0' --dependencies-only -j2 all ; fi
           if [ $((HCNUMVER < 80600)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers >=0.5.5.0' all ; fi
       - name: constraint set transformers-installed
         run: |
-          if [ $((HCNUMVER >= 70800)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers installed' --dependencies-only -j2 all ; fi
           if [ $((HCNUMVER >= 70800)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers installed' all ; fi
       - name: constraint set five
         run: |
-          if [ $((HCNUMVER < 80400)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat +five' --dependencies-only -j2 all ; fi
           if [ $((HCNUMVER < 80400)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat +five' all ; fi
       - name: constraint set four
         run: |
-          if [ $((HCNUMVER < 80000)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat +four' --dependencies-only -j2 all ; fi
           if [ $((HCNUMVER < 80000)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat +four' all ; fi
       - name: constraint set three
         run: |
-          if [ $((HCNUMVER < 71000)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat +three' --dependencies-only -j2 all ; fi
           if [ $((HCNUMVER < 71000)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat +three' all ; fi
       - name: constraint set two
         run: |
-          if [ $((HCNUMVER < 71000)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat +two' --dependencies-only -j2 all ; fi
           if [ $((HCNUMVER < 71000)) -ne 0 ] ; then $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat +two' all ; fi
       - name: constraint set no-mtl-no-generic-deriving
         run: |
-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat -generic-deriving' --constraint='tranformers-compat -mtl' --dependencies-only -j2 all
           $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat -generic-deriving' --constraint='tranformers-compat -mtl' all
       - name: constraint set no-generic-deriving
         run: |
-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat -generic-deriving' --dependencies-only -j2 all
           $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat -generic-deriving' all
       - name: constraint set no-mtl
         run: |
-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat -mtl' --dependencies-only -j2 all
           $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --constraint='transformers-compat -mtl' all

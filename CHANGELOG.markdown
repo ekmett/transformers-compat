@@ -1,3 +1,8 @@
+next [????.??.??]
+-----------------
+* Add `Eq`, `Ord`, `Read`, and `Show` instances for `FunctorClassesDefault` in
+  `Data.Functor.Classes.Generic`.
+
 0.7.1 [2021.10.30]
 ------------------
 * Backport new instances from GHC 9.2/`base-4.16`

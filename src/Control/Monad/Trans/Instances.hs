@@ -49,6 +49,12 @@ module Control.Monad.Trans.Instances () where
 #define MIN_VERSION_transformers(a,b,c) 1
 #endif
 
+#if MIN_VERSION_base(4,18,0)
+# define HAS_FOLDABLE1_TRANSFORMERS MIN_VERSION_transformers(0,6,1)
+#else
+# define HAS_FOLDABLE1_TRANSFORMERS 1
+#endif
+
 import           Control.Applicative.Backwards (Backwards(..))
 import           Control.Applicative.Lift (Lift(..))
 import qualified Control.Monad.Fail as Fail (MonadFail(..))
@@ -127,6 +133,10 @@ import           Generics.Deriving.Base
 # elif __GLASGOW_HASKELL__ >= 702
 import           GHC.Generics
 # endif
+#endif
+
+#if !HAS_FOLDABLE1_TRANSFORMERS
+import           Data.Foldable1 (Foldable1 (..))
 #endif
 
 #if !(MIN_VERSION_transformers(0,3,0))
@@ -1377,4 +1387,25 @@ instance (Show a, Show b, Show c) => Show1 ((,,,) a b c) where
     liftShowsPrec = liftShowsPrec2 showsPrec showList
 
 # endif
+#endif
+
+#if !HAS_FOLDABLE1_TRANSFORMERS
+-- | @since 0.7.3
+instance Foldable1 f => Foldable1 (Backwards f) where
+  foldMap1 f = foldMap1 f . forwards
+  {-# INLINE foldMap1 #-}
+-- | @since 0.7.3
+
+instance Foldable1 f => Foldable1 (Lift f) where
+  foldMap1 f (Pure x)  = f x
+  foldMap1 f (Other y) = foldMap1 f y
+  {-# INLINE foldMap1 #-}
+
+-- | @since 0.7.3
+instance Foldable1 m => Foldable1 (IdentityT m) where
+  foldMap1 f = foldMap1 f . runIdentityT
+
+-- | @since 0.7.3
+instance Foldable1 f => Foldable1 (Reverse f) where
+  foldMap1 f = getDual . foldMap1 (Dual . f) . getReverse
 #endif

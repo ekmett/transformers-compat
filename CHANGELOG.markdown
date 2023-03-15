@@ -1,3 +1,8 @@
+0.7.3 [2023.mm.dd]
+------------------
+
+* Provide `Foldable1 Backwards`, `Lift`, `IdentityT` and `Reverse` instances.
+
 0.7.2 [2022.06.26]
 ------------------
 * Add `Eq`, `Ord`, `Read`, and `Show` instances for `FunctorClassesDefault` in

@@ -108,7 +108,7 @@ library
     build-depends: transformers >= 0.5.3
 
   -- other flags
-  if flag(generic-deriving)
+  if impl(ghc) && flag(generic-deriving)
     hs-source-dirs: generics
     exposed-modules:
       Data.Functor.Classes.Generic

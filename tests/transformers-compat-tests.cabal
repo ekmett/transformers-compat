@@ -7,8 +7,8 @@ license-file:  LICENSE
 author:        Edward A. Kmett
 maintainer:    Edward A. Kmett <ekmett@gmail.com>
 stability:     provisional
-homepage:      http://github.com/ekmett/transformers-compat/
-bug-reports:   http://github.com/ekmett/transformers-compat/issues
+homepage:      https://github.com/ekmett/transformers-compat/
+bug-reports:   https://github.com/ekmett/transformers-compat/issues
 copyright:     Copyright (C) 2012-2015 Edward A. Kmett
 synopsis:      transformers-compat tests
 description:   @transformers-copmat@ tests
@@ -30,7 +30,7 @@ tested-with:   GHC == 7.0.4
 
 source-repository head
   type: git
-  location: git://github.com/ekmett/transformers-compat.git
+  location: https://github.com/ekmett/transformers-compat.git
 
 flag tests
   default: True

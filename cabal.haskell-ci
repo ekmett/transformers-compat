@@ -1,4 +1,3 @@
-distribution:           bionic
 no-tests-no-benchmarks: False
 jobs:                   2
 install-dependencies:   False

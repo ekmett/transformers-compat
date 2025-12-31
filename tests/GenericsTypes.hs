@@ -1,27 +1,18 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
-
-#if __GLASGOW_HASKELL__ >= 706
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
-#endif
 module GenericsTypes where
-
-#if !(MIN_VERSION_base(4,8,0))
-import Control.Applicative
-#endif
 
 import Data.Functor.Classes
 import Data.Functor.Classes.Generic
 
-#if __GLASGOW_HASKELL__ >= 706
 import GHC.Generics (Generic1)
-#endif
 import GHC.Exts
 
 import Test.QuickCheck (Arbitrary(..), oneof)
@@ -115,10 +106,7 @@ data Empty a
 instance Arbitrary (Empty a) where
   arbitrary = return $ error "Arbitrary Empty"
 
-#if __GLASGOW_HASKELL__ == 700
--- Workaround for GHC Trac #5041
-$(deriveRead ''T#)
-#elif __GLASGOW_HASKELL__ == 804
+#if __GLASGOW_HASKELL__ == 804
 -- Workaround for GHC Trac #14918
 $(deriveRead ''T#)
 #else
@@ -139,44 +127,21 @@ $(deriveShow ''Empty)
 $(deriveAll1 ''Empty)
 #endif
 
-#if __GLASGOW_HASKELL__ >= 706
 deriving instance Generic1 TestParam
 deriving instance Generic1 T#
 deriving instance Generic1 Infix
 deriving instance Generic1 GADT
 deriving instance Generic1 Record
-#else
-$(deriveAll1 ''TestParam)
-$(deriveAll1 ''T#)
-$(deriveAll1 ''Infix)
-$(deriveAll1 ''GADT)
-$(deriveAll1 ''Record)
-#endif
 
-#if __GLASGOW_HASKELL__ >= 800
 deriving instance Generic1 Prim
-#else
-$(deriveAll1 ''Prim)
-#endif
 
 #define CLASS1_INSTANCE(class,type,method,impl) \
 instance class type where { method = impl };    \
 
-#if MIN_VERSION_transformers(0,4,0) && !(MIN_VERSION_transformers(0,5,0))
-# define TRANSFORMERS_FOUR 1
-#endif
-
-#if defined(TRANSFORMERS_FOUR)
-# define EQ1_INSTANCE(type)   CLASS1_INSTANCE(Eq1,type,eq1,eq1Default)
-# define ORD1_INSTANCE(type)  CLASS1_INSTANCE(Ord1,type,compare1,compare1Default)
-# define READ1_INSTANCE(type) CLASS1_INSTANCE(Read1,type,readsPrec1,readsPrec1Default)
-# define SHOW1_INSTANCE(type) CLASS1_INSTANCE(Show1,type,showsPrec1,showsPrec1Default)
-#else
-# define EQ1_INSTANCE(type)   CLASS1_INSTANCE(Eq1,type,liftEq,liftEqDefault)
-# define ORD1_INSTANCE(type)  CLASS1_INSTANCE(Ord1,type,liftCompare,liftCompareDefault)
-# define READ1_INSTANCE(type) CLASS1_INSTANCE(Read1,type,liftReadsPrec,liftReadsPrecDefault)
-# define SHOW1_INSTANCE(type) CLASS1_INSTANCE(Show1,type,liftShowsPrec,liftShowsPrecDefault)
-#endif
+#define EQ1_INSTANCE(type)   CLASS1_INSTANCE(Eq1,type,liftEq,liftEqDefault)
+#define ORD1_INSTANCE(type)  CLASS1_INSTANCE(Ord1,type,liftCompare,liftCompareDefault)
+#define READ1_INSTANCE(type) CLASS1_INSTANCE(Read1,type,liftReadsPrec,liftReadsPrecDefault)
+#define SHOW1_INSTANCE(type) CLASS1_INSTANCE(Show1,type,liftShowsPrec,liftShowsPrecDefault)
 
 #define CLASS1_INSTANCES(type) \
 EQ1_INSTANCE(type)   \

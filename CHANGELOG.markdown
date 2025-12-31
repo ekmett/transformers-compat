@@ -1,3 +1,9 @@
+0.8 [????.??.??]
+----------------
+* Drop support for pre-8.0 versions of GHC. As a consequence,
+  `transformers-compat` no longer supports pre-0.5 versions of `transformers`.
+* The `two`, `three`, and `four` `cabal` flags have been removed.
+
 0.7.2 [2022.06.26]
 ------------------
 * Add `Eq`, `Ord`, `Read`, and `Show` instances for `FunctorClassesDefault` in

@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE EmptyCase #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE BangPatterns #-}
@@ -12,10 +13,6 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-
-#if __GLASGOW_HASKELL__ >= 708
-{-# LANGUAGE EmptyCase #-}
-#endif
 
 #if __GLASGOW_HASKELL__ >= 806
 {-# LANGUAGE QuantifiedConstraints #-}
@@ -40,44 +37,24 @@ module Data.Functor.Classes.Generic.Internal
   , defaultOptions
   , latestGHCOptions
     -- * 'Eq1'
-#if defined(TRANSFORMERS_FOUR)
-  , eq1Default
-  , eq1Options
-#else
   , liftEqDefault
   , liftEqOptions
-#endif
   , GEq1(..)
   , Eq1Args(..)
     -- * 'Ord1'
-#if defined(TRANSFORMERS_FOUR)
-  , compare1Default
-  , compare1Options
-#else
   , liftCompareDefault
   , liftCompareOptions
-#endif
   , GOrd1(..)
   , Ord1Args(..)
     -- * 'Read1'
-#if defined(TRANSFORMERS_FOUR)
-  , readsPrec1Default
-  , readsPrec1Options
-#else
   , liftReadsPrecDefault
   , liftReadsPrecOptions
-#endif
   , GRead1(..)
   , GRead1Con(..)
   , Read1Args(..)
     -- * 'Show1'
-#if defined(TRANSFORMERS_FOUR)
-  , showsPrec1Default
-  , showsPrec1Options
-#else
   , liftShowsPrecDefault
   , liftShowsPrecOptions
-#endif
   , GShow1(..)
   , GShow1Con(..)
   , Show1Args(..)
@@ -106,36 +83,15 @@ module Data.Functor.Classes.Generic.Internal
 
 import Data.Char (isSymbol, ord)
 import Data.Functor.Classes
-#ifdef GENERIC_DERIVING
-import Generics.Deriving.Base hiding (prec)
-#else
+import GHC.Exts
 import GHC.Generics hiding (prec)
-#endif
-import GHC.Read (paren, parens)
+import GHC.Read (expectP, list, paren, parens)
 import GHC.Show (appPrec, appPrec1, showSpace)
 import Text.ParserCombinators.ReadPrec
 import Text.Read (Read(..))
 import Text.Read.Lex (Lexeme(..))
-
-#if !defined(TRANSFORMERS_FOUR)
-import GHC.Read (list)
 import Text.Show (showListWith)
-#endif
 
-#if MIN_VERSION_base(4,7,0)
-import GHC.Read (expectP)
-#else
-import GHC.Read (lexP)
-import Unsafe.Coerce (unsafeCoerce)
-#endif
-
-#if MIN_VERSION_base(4,7,0) || defined(GENERIC_DERIVING)
-import GHC.Exts
-#endif
-
-#if !(MIN_VERSION_base(4,8,0))
-import Data.Monoid
-#endif
 
 -------------------------------------------------------------------------------
 -- * Options
@@ -151,14 +107,7 @@ newtype Options = Options
 
 -- | Options that match the behavior of the installed version of GHC.
 defaultOptions :: Options
-defaultOptions = Options
-  {
-#if __GLASGOW_HASKELL__ >= 800
-  ghc8ShowBehavior = True
-#else
-  ghc8ShowBehavior = False
-#endif
-  }
+defaultOptions = latestGHCOptions
 
 -- | Options that match the behavior of the most recent GHC release.
 latestGHCOptions :: Options
@@ -211,15 +160,9 @@ instance Eq p => GEq (Par1 p) where
 instance (Eq1 f, Eq p) => GEq (Rec1 f p) where
   geq (Rec1 a) (Rec1 b) = eq1 a b
 
-#if defined(TRANSFORMERS_FOUR)
-instance (Functor f, Eq1 f, GEq (g p)) => GEq ((f :.: g) p) where
-  geq (Comp1 m) (Comp1 n) = eq1 (fmap Apply m) (fmap Apply n)
-#else
 instance (Eq1 f, GEq (g p)) => GEq ((f :.: g) p) where
   geq (Comp1 m) (Comp1 n) = liftEq geq m n
-#endif
 
-#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 -- Unboxed types
 instance GEq (UAddr p) where
   geq = eqUAddr
@@ -238,7 +181,6 @@ instance GEq (UInt p) where
 
 instance GEq (UWord p) where
   geq = eqUWord
-#endif
 
 -------------------------------------------------------------------------------
 -- * Eq1
@@ -252,18 +194,6 @@ data Eq1Args v a b where
     V4Eq1Args    :: Eq a             => Eq1Args V4    a a
     NonV4Eq1Args :: (a -> b -> Bool) -> Eq1Args NonV4 a b
 
-#if defined(TRANSFORMERS_FOUR)
--- | A sensible default 'eq1' implementation for 'Generic1' instances.
-eq1Default :: (GEq1 V4 (Rep1 f), Generic1 f, Eq a)
-           => f a -> f a -> Bool
-eq1Default = eq1Options defaultOptions
-
--- | Like 'eq1Default', but with configurable 'Options'. Currently,
--- the 'Options' have no effect (but this may change in the future).
-eq1Options :: (GEq1 V4 (Rep1 f), Generic1 f, Eq a)
-           => Options -> f a -> f a -> Bool
-eq1Options _ m n = gliftEq V4Eq1Args (from1 m) (from1 n)
-#else
 -- | A sensible default 'liftEq' implementation for 'Generic1' instances.
 liftEqDefault :: (GEq1 NonV4 (Rep1 f), Generic1 f)
               => (a -> b -> Bool) -> f a -> f b -> Bool
@@ -274,7 +204,6 @@ liftEqDefault = liftEqOptions defaultOptions
 liftEqOptions :: (GEq1 NonV4 (Rep1 f), Generic1 f)
               => Options -> (a -> b -> Bool) -> f a -> f b -> Bool
 liftEqOptions _ f m n = gliftEq (NonV4Eq1Args f) (from1 m) (from1 n)
-#endif
 
 -- | Class of generic representation types that can lift equality through unary
 -- type constructors.
@@ -305,16 +234,6 @@ instance GEq1 v U1 where
 instance GEq1 v V1 where
   gliftEq _ _ _ = True
 
-#if defined(TRANSFORMERS_FOUR)
-instance GEq1 V4 Par1 where
-  gliftEq V4Eq1Args (Par1 a) (Par1 b) = a == b
-
-instance Eq1 f => GEq1 V4 (Rec1 f) where
-  gliftEq V4Eq1Args (Rec1 a) (Rec1 b) = eq1 a b
-
-instance (Functor f, Eq1 f, GEq1 V4 g) => GEq1 V4 (f :.: g) where
-  gliftEq V4Eq1Args (Comp1 m) (Comp1 n) = eq1 (fmap Apply1 m) (fmap Apply1 n)
-#else
 instance GEq1 NonV4 Par1 where
   gliftEq (NonV4Eq1Args f) (Par1 a) (Par1 b) = f a b
 
@@ -324,9 +243,7 @@ instance Eq1 f => GEq1 NonV4 (Rec1 f) where
 instance (Eq1 f, GEq1 NonV4 g) => GEq1 NonV4 (f :.: g) where
   gliftEq (NonV4Eq1Args f) (Comp1 m) (Comp1 n) =
     liftEq (gliftEq (NonV4Eq1Args f)) m n
-#endif
 
-#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 -- Unboxed types
 instance GEq1 v UAddr where
   gliftEq _ = eqUAddr
@@ -363,7 +280,6 @@ eqUInt (UInt i1) (UInt i2) = isTrue# (i1 ==# i2)
 
 eqUWord :: UWord p -> UWord q -> Bool
 eqUWord (UWord w1) (UWord w2) = isTrue# (eqWord# w1 w2)
-#endif
 
 -------------------------------------------------------------------------------
 -- * Ord
@@ -405,15 +321,9 @@ instance Ord p => GOrd (Par1 p) where
 instance (Ord1 f, Ord p) => GOrd (Rec1 f p) where
   gcompare (Rec1 a) (Rec1 b) = compare1 a b
 
-#if defined(TRANSFORMERS_FOUR)
-instance (Functor f, Ord1 f, GOrd (g p)) => GOrd ((f :.: g) p) where
-  gcompare (Comp1 m) (Comp1 n) = compare1 (fmap Apply m) (fmap Apply n)
-#else
 instance (Ord1 f, GOrd (g p)) => GOrd ((f :.: g) p) where
   gcompare (Comp1 m) (Comp1 n) = liftCompare gcompare m n
-#endif
 
-#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 -- Unboxed types
 instance GOrd (UAddr p) where
   gcompare = compareUAddr
@@ -432,7 +342,6 @@ instance GOrd (UInt p) where
 
 instance GOrd (UWord p) where
   gcompare = compareUWord
-#endif
 
 -------------------------------------------------------------------------------
 -- * Ord1
@@ -446,18 +355,6 @@ data Ord1Args v a b where
     V4Ord1Args    :: Ord a                => Ord1Args V4    a a
     NonV4Ord1Args :: (a -> b -> Ordering) -> Ord1Args NonV4 a b
 
-#if defined(TRANSFORMERS_FOUR)
--- | A sensible default 'compare1' implementation for 'Generic1' instances.
-compare1Default :: (GOrd1 V4 (Rep1 f), Generic1 f, Ord a)
-                => f a -> f a -> Ordering
-compare1Default = compare1Options defaultOptions
-
--- | Like 'compare1Default', but with configurable 'Options'. Currently,
--- the 'Options' have no effect (but this may change in the future).
-compare1Options :: (GOrd1 V4 (Rep1 f), Generic1 f, Ord a)
-                => Options -> f a -> f a -> Ordering
-compare1Options _ m n = gliftCompare V4Ord1Args (from1 m) (from1 n)
-#else
 -- | A sensible default 'liftCompare' implementation for 'Generic1' instances.
 liftCompareDefault :: (GOrd1 NonV4 (Rep1 f), Generic1 f)
                    => (a -> b -> Ordering) -> f a -> f b -> Ordering
@@ -468,7 +365,6 @@ liftCompareDefault = liftCompareOptions defaultOptions
 liftCompareOptions :: (GOrd1 NonV4 (Rep1 f), Generic1 f)
                    => Options -> (a -> b -> Ordering) -> f a -> f b -> Ordering
 liftCompareOptions _ f m n = gliftCompare (NonV4Ord1Args f) (from1 m) (from1 n)
-#endif
 
 -- | Class of generic representation types that can lift a total order through
 -- unary type constructors.
@@ -501,17 +397,6 @@ instance GOrd1 v U1 where
 instance GOrd1 v V1 where
   gliftCompare _ _ _ = EQ
 
-#if defined(TRANSFORMERS_FOUR)
-instance GOrd1 V4 Par1 where
-  gliftCompare V4Ord1Args (Par1 a) (Par1 b) = compare a b
-
-instance Ord1 f => GOrd1 V4 (Rec1 f) where
-  gliftCompare V4Ord1Args (Rec1 a) (Rec1 b) = compare1 a b
-
-instance (Functor f, Ord1 f, GOrd1 V4 g) => GOrd1 V4 (f :.: g) where
-  gliftCompare V4Ord1Args (Comp1 m) (Comp1 n) =
-    compare1 (fmap Apply1 m) (fmap Apply1 n)
-#else
 instance GOrd1 NonV4 Par1 where
   gliftCompare (NonV4Ord1Args f) (Par1 a) (Par1 b) = f a b
 
@@ -521,9 +406,7 @@ instance Ord1 f => GOrd1 NonV4 (Rec1 f) where
 instance (Ord1 f, GOrd1 NonV4 g) => GOrd1 NonV4 (f :.: g) where
   gliftCompare (NonV4Ord1Args f) (Comp1 m) (Comp1 n) =
     liftCompare (gliftCompare (NonV4Ord1Args f)) m n
-#endif
 
-#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 -- Unboxed types
 instance GOrd1 v UAddr where
   gliftCompare _ = compareUAddr
@@ -561,15 +444,10 @@ compareUInt (UInt i1) (UInt i2) = primCompare (i1 ==# i2) (i1 <=# i2)
 compareUWord :: UWord p -> UWord q -> Ordering
 compareUWord (UWord w1) (UWord w2) = primCompare (eqWord# w1 w2) (leWord# w1 w2)
 
-# if __GLASGOW_HASKELL__ >= 708
 primCompare :: Int# -> Int# -> Ordering
-# else
-primCompare :: Bool -> Bool -> Ordering
-# endif
 primCompare eq le = if isTrue# eq then EQ
                     else if isTrue# le then LT
                     else GT
-#endif
 
 -------------------------------------------------------------------------------
 -- * Read
@@ -616,17 +494,6 @@ instance (GReadCon (f p), GReadCon (g p)) => GReadCon ((f :*: g) p) where
 instance Read p => GReadCon (Par1 p) where
   greadPrecCon _ = coercePar1 readPrec
 
-#if defined(TRANSFORMERS_FOUR)
-instance (Read1 f, Read p) => GReadCon (Rec1 f p) where
-  greadPrecCon _ = coerceRec1 $ readS_to_Prec readsPrec1
-
-instance (Functor f, Read1 f, GReadCon (g p)) => GReadCon ((f :.: g) p) where
-  greadPrecCon _ =
-      coerceComp1 $ fmap (fmap getApply) $ readS_to_Prec crp1
-    where
-      crp1 :: Int -> ReadS (f (Apply g p))
-      crp1 = readsPrec1
-#else
 instance (Read1 f, Read p) => GReadCon (Rec1 f p) where
   greadPrecCon _ = coerceRec1 $ readS_to_Prec $
       liftReadsPrec (readPrec_to_S readPrec) (readPrec_to_S readListPrec 0)
@@ -637,7 +504,6 @@ instance (Read1 f, GReadCon (g p)) => GReadCon ((f :.: g) p) where
                     (readPrec_to_S (list grpc) 0)
     where
       grpc = greadPrecCon t
-#endif
 
 -------------------------------------------------------------------------------
 -- * Read1
@@ -651,19 +517,6 @@ data Read1Args v a where
     V4Read1Args    :: Read a                     => Read1Args V4    a
     NonV4Read1Args :: ReadPrec a -> ReadPrec [a] -> Read1Args NonV4 a
 
-#if defined(TRANSFORMERS_FOUR)
--- | A sensible default 'readsPrec1' implementation for 'Generic1' instances.
-readsPrec1Default :: (GRead1 V4 (Rep1 f), Generic1 f, Read a)
-                  => Int -> ReadS (f a)
-readsPrec1Default = readsPrec1Options defaultOptions
-
--- | Like 'readsPrec1Default', but with configurable 'Options'. Currently,
--- the 'Options' have no effect (but this may change in the future).
-readsPrec1Options :: (GRead1 V4 (Rep1 f), Generic1 f, Read a)
-                  => Options -> Int -> ReadS (f a)
-readsPrec1Options _ p =
-  readPrec_to_S (fmap to1 $ gliftReadPrec V4Read1Args) p
-#else
 -- | A sensible default 'liftReadsPrec' implementation for 'Generic1' instances.
 liftReadsPrecDefault :: (GRead1 NonV4 (Rep1 f), Generic1 f)
                      => (Int -> ReadS a) -> ReadS [a] -> Int -> ReadS (f a)
@@ -677,17 +530,6 @@ liftReadsPrecOptions _ rp rl p =
   readPrec_to_S (fmap to1 $ gliftReadPrec
                       (NonV4Read1Args (readS_to_Prec rp)
                                       (readS_to_Prec (const rl)))) p
-#endif
-
-#if !(MIN_VERSION_base(4,7,0))
-coerce :: a -> b
-coerce = unsafeCoerce
-
-expectP :: Lexeme -> ReadPrec ()
-expectP lexeme = do
-  thing <- lexP
-  if thing == lexeme then return () else pfail
-#endif
 
 coerceM1 :: ReadPrec (f p) -> ReadPrec (M1 i c f p)
 coerceM1 = coerce
@@ -872,20 +714,6 @@ productReadPrec t rpf rpg = do
                      else mapM_ expectP $
                               [Punc "`"] ++ identHLexemes o ++ [Punc "`"]
 
-#if defined(TRANSFORMERS_FOUR)
-instance GRead1Con V4 Par1 where
-  gliftReadPrecCon _ V4Read1Args = coercePar1 readPrec
-
-instance Read1 f => GRead1Con V4 (Rec1 f) where
-  gliftReadPrecCon _ V4Read1Args = coerceRec1 $ readS_to_Prec readsPrec1
-
-instance (Functor f, Read1 f, GRead1Con V4 g) => GRead1Con V4 (f :.: g) where
-  gliftReadPrecCon _ (V4Read1Args :: Read1Args V4 p) =
-      coerceComp1 $ fmap (fmap getApply1) $ readS_to_Prec crp1
-    where
-      crp1 :: Int -> ReadS (f (Apply1 g p))
-      crp1 = readsPrec1
-#else
 instance GRead1Con NonV4 Par1 where
   gliftReadPrecCon _ (NonV4Read1Args rp _) = coercePar1 rp
 
@@ -899,7 +727,6 @@ instance (Read1 f, GRead1Con NonV4 g) => GRead1Con NonV4 (f :.: g) where
                     (readPrec_to_S (list grpc) 0)
     where
       grpc = gliftReadPrecCon t (NonV4Read1Args rp rl)
-#endif
 
 -------------------------------------------------------------------------------
 -- * Show
@@ -956,13 +783,6 @@ instance (GShowCon (f p), GShowCon (g p)) => GShowCon ((f :*: g) p) where
 instance Show p => GShowCon (Par1 p) where
   gshowsPrecCon _ _ p (Par1 x) = showsPrec p x
 
-#if defined(TRANSFORMERS_FOUR)
-instance (Show1 f, Show p) => GShowCon (Rec1 f p) where
-  gshowsPrecCon _ _ p (Rec1 x) = showsPrec1 p x
-
-instance (Functor f, Show1 f, GShowCon (g p)) => GShowCon ((f :.: g) p) where
-  gshowsPrecCon _ _ p (Comp1 x) = showsPrec1 p (fmap Apply x)
-#else
 instance (Show1 f, Show p) => GShowCon (Rec1 f p) where
   gshowsPrecCon _ _ p (Rec1 x) = liftShowsPrec showsPrec showList p x
 
@@ -970,9 +790,7 @@ instance (Show1 f, GShowCon (g p)) => GShowCon ((f :.: g) p) where
   gshowsPrecCon opts t p (Comp1 x) =
     let glspc = gshowsPrecCon opts t
     in liftShowsPrec glspc (showListWith (glspc 0)) p x
-#endif
 
-#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 instance GShowCon (UChar p) where
   gshowsPrecCon opts _ = uCharShowsPrec opts
 
@@ -987,7 +805,6 @@ instance GShowCon (UInt p) where
 
 instance GShowCon (UWord p) where
   gshowsPrecCon opts _ = uWordShowsPrec opts
-#endif
 
 -------------------------------------------------------------------------------
 -- * Show1
@@ -1001,17 +818,6 @@ data Show1Args v a where
     V4Show1Args    :: Show a                                => Show1Args V4    a
     NonV4Show1Args :: (Int -> a -> ShowS) -> ([a] -> ShowS) -> Show1Args NonV4 a
 
-#if defined(TRANSFORMERS_FOUR)
--- | A sensible default 'showsPrec1' implementation for 'Generic1' instances.
-showsPrec1Default :: (GShow1 V4 (Rep1 f), Generic1 f, Show a)
-                  => Int -> f a -> ShowS
-showsPrec1Default = showsPrec1Options defaultOptions
-
--- | Like 'showsPrec1Default', but with configurable 'Options'.
-showsPrec1Options :: (GShow1 V4 (Rep1 f), Generic1 f, Show a)
-                  => Options -> Int -> f a -> ShowS
-showsPrec1Options opts p = gliftShowsPrec opts V4Show1Args p . from1
-#else
 -- | A sensible default 'liftShowsPrec' implementation for 'Generic1' instances.
 liftShowsPrecDefault :: (GShow1 NonV4 (Rep1 f), Generic1 f)
                      => (Int -> a -> ShowS) -> ([a] -> ShowS)
@@ -1023,7 +829,6 @@ liftShowsPrecOptions :: (GShow1 NonV4 (Rep1 f), Generic1 f)
                      => Options -> (Int -> a -> ShowS) -> ([a] -> ShowS)
                      -> Int -> f a -> ShowS
 liftShowsPrecOptions opts sp sl p = gliftShowsPrec opts (NonV4Show1Args sp sl) p . from1
-#endif
 
 -- | Class of generic representation types for unary type constructors that can
 -- be converted to a 'String'.
@@ -1041,11 +846,7 @@ instance GShow1 v V1 where
   gliftShowsPrec _ _ = v1ShowsPrec
 
 v1ShowsPrec :: Int -> V1 p -> ShowS
-#if __GLASGOW_HASKELL__ >= 708
 v1ShowsPrec _ _  x = case x of {}
-#else
-v1ShowsPrec _ _ !_ = undefined
-#endif
 
 instance (GShow1 v f, GShow1 v g) => GShow1 v (f :+: g) where
   gliftShowsPrec opts sas p (L1 x) = gliftShowsPrec opts sas p x
@@ -1156,16 +957,6 @@ productShowsPrec spf spg t p (a :*: b) =
                    then showString o
                    else showChar '`' . showString o . showChar '`'
 
-#if defined(TRANSFORMERS_FOUR)
-instance GShow1Con V4 Par1 where
-  gliftShowsPrecCon _ _ V4Show1Args p (Par1 x) = showsPrec p x
-
-instance Show1 f => GShow1Con V4 (Rec1 f) where
-  gliftShowsPrecCon _ _ V4Show1Args p (Rec1 x) = showsPrec1 p x
-
-instance (Functor f, Show1 f, GShow1Con V4 g) => GShow1Con V4 (f :.: g) where
-  gliftShowsPrecCon _ _ V4Show1Args p (Comp1 x) = showsPrec1 p (fmap Apply1 x)
-#else
 instance GShow1Con NonV4 Par1 where
   gliftShowsPrecCon _ _ (NonV4Show1Args sp _) p (Par1 x) = sp p x
 
@@ -1176,9 +967,7 @@ instance (Show1 f, GShow1Con NonV4 g) => GShow1Con NonV4 (f :.: g) where
   gliftShowsPrecCon opts t (NonV4Show1Args sp sl) p (Comp1 x) =
     let glspc = gliftShowsPrecCon opts t (NonV4Show1Args sp sl)
     in liftShowsPrec glspc (showListWith (glspc 0)) p x
-#endif
 
-#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 instance GShow1Con v UChar where
   gliftShowsPrecCon opts _ _ = uCharShowsPrec opts
 
@@ -1219,7 +1008,6 @@ hashPrec         :: Options -> Int -> Int
 oneHash  opts = if ghc8ShowBehavior opts then showChar   '#'  else id
 twoHash  opts = if ghc8ShowBehavior opts then showString "##" else id
 hashPrec opts = if ghc8ShowBehavior opts then const 0         else id
-#endif
 
 -------------------------------------------------------------------------------
 -- * GenericFunctorClasses
@@ -1230,16 +1018,6 @@ hashPrec opts = if ghc8ShowBehavior opts then const 0         else id
 newtype FunctorClassesDefault f a =
   FunctorClassesDefault { getFunctorClassesDefault :: f a }
 
-#if defined(TRANSFORMERS_FOUR)
-instance (GEq1 V4 (Rep1 f), Generic1 f) => Eq1 (FunctorClassesDefault f) where
-   eq1 (FunctorClassesDefault x) (FunctorClassesDefault y) = eq1Default x y
-instance (GOrd1 V4 (Rep1 f), Generic1 f) => Ord1 (FunctorClassesDefault f) where
-   compare1 (FunctorClassesDefault x) (FunctorClassesDefault y) = compare1Default x y
-instance (GRead1 V4 (Rep1 f), Generic1 f) => Read1 (FunctorClassesDefault f) where
-   readsPrec1 p = coerceFCD (readsPrec1Default p)
-instance (GShow1 V4 (Rep1 f), Generic1 f) => Show1 (FunctorClassesDefault f) where
-   showsPrec1 p (FunctorClassesDefault x) = showsPrec1Default p x
-#else
 instance (GEq1 NonV4 (Rep1 f), Generic1 f) => Eq1 (FunctorClassesDefault f) where
    liftEq f (FunctorClassesDefault x) (FunctorClassesDefault y) = liftEqDefault f x y
 instance (GOrd1 NonV4 (Rep1 f), Generic1 f) => Ord1 (FunctorClassesDefault f) where
@@ -1248,7 +1026,6 @@ instance (GRead1 NonV4 (Rep1 f), Generic1 f) => Read1 (FunctorClassesDefault f) 
    liftReadsPrec rp rl p = coerceFCD (liftReadsPrecDefault rp rl p)
 instance (GShow1 NonV4 (Rep1 f), Generic1 f) => Show1 (FunctorClassesDefault f) where
    liftShowsPrec sp sl p (FunctorClassesDefault x) = liftShowsPrecDefault sp sl p x
-#endif
 
 instance (GEq (Rep1 f a), Generic1 f) => Eq (FunctorClassesDefault f a) where
   FunctorClassesDefault x == FunctorClassesDefault y = eqDefault x y
@@ -1265,36 +1042,6 @@ coerceFCD = coerce
 -------------------------------------------------------------------------------
 -- * Shared code
 -------------------------------------------------------------------------------
-
-#if defined(TRANSFORMERS_FOUR)
-newtype Apply  g a = Apply  { getApply  :: g a }
-newtype Apply1 g a = Apply1 { getApply1 :: g a }
-
-instance GEq (g a) => Eq (Apply g a) where
-    Apply x == Apply y = geq x y
-instance (GEq1 V4 g, Eq a) => Eq (Apply1 g a) where
-    Apply1 x == Apply1 y = gliftEq V4Eq1Args x y
-
-instance GOrd (g a) => Ord (Apply g a) where
-    compare (Apply x) (Apply y) = gcompare x y
-instance (GOrd1 V4 g, Ord a) => Ord (Apply1 g a) where
-    compare (Apply1 x) (Apply1 y) = gliftCompare V4Ord1Args x y
-
--- Passing defaultOptions and Pref below is OK, since it's guaranteed that the
--- Options and ConType won't actually have any effect on how (g a) is shown.
--- If we augment Options or ConType with more features in the future, this
--- decision will need to be revisited.
-
-instance GReadCon (g a) => Read (Apply g a) where
-    readPrec = fmap Apply $ greadPrecCon Pref
-instance (GRead1Con V4 g, Read a) => Read (Apply1 g a) where
-    readPrec = fmap Apply1 $ gliftReadPrecCon Pref V4Read1Args
-
-instance GShowCon (g a) => Show (Apply g a) where
-    showsPrec d = gshowsPrecCon defaultOptions Pref d . getApply
-instance (GShow1Con V4 g, Show a) => Show (Apply1 g a) where
-    showsPrec d = gliftShowsPrecCon defaultOptions Pref V4Show1Args d . getApply1
-#endif
 
 -- | Whether a constructor is a record ('Rec'), a tuple ('Tup'), is prefix ('Pref'),
 -- or infix ('Inf').
@@ -1353,7 +1100,6 @@ instance IsNullaryCon (f :*: g) where
 instance IsNullaryCon (f :.: g) where
     isNullaryCon _ = False
 
-#if MIN_VERSION_base(4,9,0) || defined(GENERIC_DERIVING)
 instance IsNullaryCon UChar where
     isNullaryCon _ = False
 
@@ -1368,9 +1114,3 @@ instance IsNullaryCon UInt where
 
 instance IsNullaryCon UWord where
     isNullaryCon _ = False
-
-# if __GLASGOW_HASKELL__ < 708
-isTrue# :: Bool -> Bool
-isTrue# = id
-# endif
-#endif

@@ -1,22 +1,12 @@
 {-# LANGUAGE CPP #-}
 
 #ifndef HASKELL98
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE Safe #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
-# if __GLASGOW_HASKELL__ >= 706
-{-# LANGUAGE PolyKinds #-}
-# endif
-# if __GLASGOW_HASKELL__ >= 708
-{-# LANGUAGE AutoDeriveTypeable #-}
-{-# LANGUAGE DataKinds #-}
-# endif
-# if __GLASGOW_HASKELL__ >= 710
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE Safe #-}
-# elif __GLASGOW_HASKELL__ >= 702
-{-# LANGUAGE Trustworthy #-}
-# endif
 #endif
 -----------------------------------------------------------------------------
 -- |
@@ -78,20 +68,9 @@ import Control.Monad
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix
 import Control.Monad.Signatures
-#if !MIN_VERSION_base(4,8,0)
-import Data.Monoid
-#endif
-
-#if !defined(HASKELL98) && __GLASGOW_HASKELL__ >= 708
-import Data.Typeable
-#endif
 
 #ifndef HASKELL98
-# ifdef GENERIC_DERIVING
-import Generics.Deriving.Base
-# elif __GLASGOW_HASKELL__ >= 702
 import GHC.Generics
-# endif
 #endif
 
 -- ---------------------------------------------------------------------------
@@ -155,27 +134,7 @@ mapAccum f = mapAccumT (Identity . f . runIdentity)
 newtype AccumT w m a = AccumT (w -> m (a, w))
 
 #ifndef HASKELL98
-# if __GLASGOW_HASKELL__ >= 710
 deriving instance Generic (AccumT w m a)
-# elif __GLASGOW_HASKELL__ >= 702 || defined(GENERIC_DERIVING)
-instance Generic (AccumT w m a) where
-  type Rep (AccumT w m a) = D1 D1'AccumT (C1 C1_0'AccumT (S1 NoSelector (Rec0 (w -> m (a, w)))))
-  from (AccumT x) = M1 (M1 (M1 (K1 x)))
-  to (M1 (M1 (M1 (K1 x)))) = AccumT x
-
-instance Datatype D1'AccumT where
-  datatypeName _ = "AccumT"
-  moduleName _ = "Control.Monad.Trans.Accum"
-#  if MIN_VERSION_base(4,7,0)
-  isNewtype _ = True
-#  endif
-
-instance Constructor C1_0'AccumT where
-  conName _ = "AccumT"
-
-data D1'AccumT
-data C1_0'AccumT
-# endif
 #endif
 
 -- | Unwrap an accumulation computation.
@@ -230,10 +189,6 @@ instance (Monoid w, Functor m, MonadPlus m) => Alternative (AccumT w m) where
     {-# INLINE (<|>) #-}
 
 instance (Monoid w, Functor m, Monad m) => Monad (AccumT w m) where
-#if !(MIN_VERSION_base(4,8,0))
-    return a  = AccumT $ const $ return (a, mempty)
-    {-# INLINE return #-}
-#endif
     m >>= k  = AccumT $ \ w -> do
         ~(a, w')  <- runAccumT m w
         ~(b, w'') <- runAccumT (k a) (w `mappend` w')
@@ -267,10 +222,6 @@ instance (Monoid w) => MonadTrans (AccumT w) where
 instance (Monoid w, Functor m, MonadIO m) => MonadIO (AccumT w m) where
     liftIO = lift . liftIO
     {-# INLINE liftIO #-}
-
-#if !defined(HASKELL98) && __GLASGOW_HASKELL__ >= 708
-deriving instance Typeable AccumT
-#endif
 
 -- | @'look'@ is an action that fetches all the previously accumulated output.
 look :: (Monoid w, Monad m) => AccumT w m w

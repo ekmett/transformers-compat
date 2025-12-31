@@ -1,5 +1,7 @@
 0.8 [????.??.??]
 ----------------
+* Fix a bug where `liftShowsPrecDefault` would not evaluate empty data types
+  (i.e., data types whose generic representations use `V1`) properly.
 * Drop support for pre-8.0 versions of GHC. As a consequence,
   `transformers-compat` no longer supports pre-0.5 versions of `transformers`.
 * The `two`, `three`, and `four` `cabal` flags have been removed.

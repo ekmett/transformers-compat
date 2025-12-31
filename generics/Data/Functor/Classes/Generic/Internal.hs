@@ -846,7 +846,7 @@ instance GShow1 v V1 where
   gliftShowsPrec _ _ = v1ShowsPrec
 
 v1ShowsPrec :: Int -> V1 p -> ShowS
-v1ShowsPrec _ _  x = case x of {}
+v1ShowsPrec _ x = case x of {}
 
 instance (GShow1 v f, GShow1 v g) => GShow1 v (f :+: g) where
   gliftShowsPrec opts sas p (L1 x) = gliftShowsPrec opts sas p x

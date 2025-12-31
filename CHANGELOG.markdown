@@ -5,6 +5,10 @@
 * Drop support for pre-8.0 versions of GHC. As a consequence,
   `transformers-compat` no longer supports pre-0.5 versions of `transformers`.
 * The `two`, `three`, and `four` `cabal` flags have been removed.
+* The definitions of the `G{Eq,Ord,Read,Show}1` classes have been simplified
+  now that support for pre-0.5 versions of `transformers` has been dropped.
+  This is technically a breaking API change, albeit one that is unlikely to
+  affect most users.
 
 0.7.2 [2022.06.26]
 ------------------

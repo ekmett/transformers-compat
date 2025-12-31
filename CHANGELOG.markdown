@@ -4,6 +4,9 @@
   (i.e., data types whose generic representations use `V1`) properly.
 * Drop support for pre-8.0 versions of GHC. As a consequence,
   `transformers-compat` no longer supports pre-0.5 versions of `transformers`.
+* Remove the `ghc8ShowBehavior` field of the `Options` data type in
+  `Data.Functor.Classes.Generic`. The machinery in this module now always
+  uses the behavior of `deriving Show` in GHC 8.0 or later.
 * The `two`, `three`, and `four` `cabal` flags have been removed.
 * The definitions of the `G{Eq,Ord,Read,Show}1` classes have been simplified
   now that support for pre-0.5 versions of `transformers` has been dropped.

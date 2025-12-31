@@ -90,20 +90,17 @@ import Text.Show (showListWith)
 -------------------------------------------------------------------------------
 
 -- | Options that further configure how the functions in
--- "Data.Functor.Classes.Generic" should behave.
-newtype Options = Options
-  { ghc8ShowBehavior :: Bool
-    -- ^ If 'True', a default 'Show1' implementation will show hash signs
-    -- (@#@) when showing unlifted types.
-  }
+-- "Data.Functor.Classes.Generic" should behave. Currently, the 'Options' have
+-- no effect (but this may change in the future).
+data Options = Options
 
 -- | Options that match the behavior of the installed version of GHC.
 defaultOptions :: Options
-defaultOptions = latestGHCOptions
+defaultOptions = Options
 
 -- | Options that match the behavior of the most recent GHC release.
 latestGHCOptions :: Options
-latestGHCOptions = Options { ghc8ShowBehavior = True }
+latestGHCOptions = Options
 
 -------------------------------------------------------------------------------
 -- * Eq
@@ -696,73 +693,71 @@ showsPrecDefault :: (GShow (Rep1 f a), Generic1 f)
                  => Int -> f a -> ShowS
 showsPrecDefault = showsPrecOptions defaultOptions
 
--- | Like 'showsPrecDefault', but with configurable 'Options'.
+-- | Like 'showsPrecDefault', but with configurable 'Options'. Currently, the
+-- 'Options' have no effect (but this may change in the future).
 showsPrecOptions :: (GShow (Rep1 f a), Generic1 f)
                  => Options -> Int -> f a -> ShowS
-showsPrecOptions opts p = gshowsPrec opts p . from1
+showsPrecOptions _ p = gshowsPrec p . from1
 
 -- | Class of generic representation types that can be converted to a 'String'.
 class GShow a where
-  gshowsPrec :: Options -> Int -> a -> ShowS
+  gshowsPrec :: Int -> a -> ShowS
 
 instance GShow (f p) => GShow (D1 d f p) where
-  gshowsPrec opts p (M1 x) = gshowsPrec opts p x
+  gshowsPrec p (M1 x) = gshowsPrec p x
 
 instance GShow (V1 p) where
-  gshowsPrec _ = v1ShowsPrec
+  gshowsPrec = v1ShowsPrec
 
 instance (GShow (f p), GShow (g p)) => GShow ((f :+: g) p) where
-  gshowsPrec opts p (L1 x) = gshowsPrec opts p x
-  gshowsPrec opts p (R1 x) = gshowsPrec opts p x
+  gshowsPrec p (L1 x) = gshowsPrec p x
+  gshowsPrec p (R1 x) = gshowsPrec p x
 
 instance (Constructor c, GShowCon (f p), IsNullaryCon f) => GShow (C1 c f p) where
-  gshowsPrec opts = c1ShowsPrec $ gshowsPrecCon opts
+  gshowsPrec = c1ShowsPrec gshowsPrecCon
 
 -- | Class of generic representation types that can be converted to a 'String', and
 -- for which the 'ConType' has been determined.
 class GShowCon a where
-  gshowsPrecCon :: Options -> ConType -> Int -> a -> ShowS
+  gshowsPrecCon :: ConType -> Int -> a -> ShowS
 
 instance GShowCon (U1 p) where
-  gshowsPrecCon _ _ _ U1 = id
+  gshowsPrecCon _ _ U1 = id
 
 instance Show c => GShowCon (K1 i c p) where
-  gshowsPrecCon _ _ p (K1 x) = showsPrec p x
+  gshowsPrecCon _ p (K1 x) = showsPrec p x
 
 instance (Selector s, GShowCon (f p)) => GShowCon (S1 s f p) where
-  gshowsPrecCon opts = s1ShowsPrec . gshowsPrecCon opts
+  gshowsPrecCon = s1ShowsPrec . gshowsPrecCon
 
 instance (GShowCon (f p), GShowCon (g p)) => GShowCon ((f :*: g) p) where
-  gshowsPrecCon opts t =
-    productShowsPrec (gshowsPrecCon opts t)
-                     (gshowsPrecCon opts t)
-                     t
+  gshowsPrecCon t = productShowsPrec (gshowsPrecCon t) (gshowsPrecCon t) t
 
 instance Show p => GShowCon (Par1 p) where
-  gshowsPrecCon _ _ p (Par1 x) = showsPrec p x
+  gshowsPrecCon _ p (Par1 x) = showsPrec p x
 
 instance (Show1 f, Show p) => GShowCon (Rec1 f p) where
-  gshowsPrecCon _ _ p (Rec1 x) = liftShowsPrec showsPrec showList p x
+  gshowsPrecCon _ p (Rec1 x) = liftShowsPrec showsPrec showList p x
 
 instance (Show1 f, GShowCon (g p)) => GShowCon ((f :.: g) p) where
-  gshowsPrecCon opts t p (Comp1 x) =
-    let glspc = gshowsPrecCon opts t
+  gshowsPrecCon t p (Comp1 x) =
+    let glspc = gshowsPrecCon t
     in liftShowsPrec glspc (showListWith (glspc 0)) p x
 
 instance GShowCon (UChar p) where
-  gshowsPrecCon opts _ = uCharShowsPrec opts
+  gshowsPrecCon _ = uCharShowsPrec
 
 instance GShowCon (UDouble p) where
-  gshowsPrecCon opts _ = uDoubleShowsPrec opts
+  gshowsPrecCon _ = uDoubleShowsPrec
 
 instance GShowCon (UFloat p) where
-  gshowsPrecCon opts _ = uFloatShowsPrec opts
+  gshowsPrecCon _ = uFloatShowsPrec
 
 instance GShowCon (UInt p) where
-  gshowsPrecCon opts _ = uIntShowsPrec opts
+  gshowsPrecCon _ = uIntShowsPrec
 
 instance GShowCon (UWord p) where
-  gshowsPrecCon opts _ = uWordShowsPrec opts
+  gshowsPrecCon _ = uWordShowsPrec
 
 -------------------------------------------------------------------------------
 -- * Show1
@@ -774,11 +769,12 @@ liftShowsPrecDefault :: (GShow1 (Rep1 f), Generic1 f)
                      -> Int -> f a -> ShowS
 liftShowsPrecDefault = liftShowsPrecOptions defaultOptions
 
--- | Like 'liftShowsPrecDefault', but with configurable 'Options'.
+-- | Like 'liftShowsPrecDefault', but with configurable 'Options'. Currently,
+-- the 'Options' have no effect (but this may change in the future).
 liftShowsPrecOptions :: (GShow1 (Rep1 f), Generic1 f)
                      => Options -> (Int -> a -> ShowS) -> ([a] -> ShowS)
                      -> Int -> f a -> ShowS
-liftShowsPrecOptions opts sp sl p = gliftShowsPrec opts sp sl p . from1
+liftShowsPrecOptions _ sp sl p = gliftShowsPrec sp sl p . from1
 
 -- | Class of generic representation types for unary type constructors that can
 -- be converted to a 'String'.
@@ -787,24 +783,24 @@ class
     (forall a. Show a => GShow (f a)) =>
 #endif
     GShow1 f where
-  gliftShowsPrec :: Options -> (Int -> a -> ShowS) -> ([a] -> ShowS)
+  gliftShowsPrec :: (Int -> a -> ShowS) -> ([a] -> ShowS)
                  -> Int -> f a -> ShowS
 
 instance GShow1 f => GShow1 (D1 d f) where
-  gliftShowsPrec opts sp sl p (M1 x) = gliftShowsPrec opts sp sl p x
+  gliftShowsPrec sp sl p (M1 x) = gliftShowsPrec sp sl p x
 
 instance GShow1 V1 where
-  gliftShowsPrec _ _ _ = v1ShowsPrec
+  gliftShowsPrec _ _ = v1ShowsPrec
 
 v1ShowsPrec :: Int -> V1 p -> ShowS
 v1ShowsPrec _ x = case x of {}
 
 instance (GShow1 f, GShow1 g) => GShow1 (f :+: g) where
-  gliftShowsPrec opts sp sl p (L1 x) = gliftShowsPrec opts sp sl p x
-  gliftShowsPrec opts sp sl p (R1 x) = gliftShowsPrec opts sp sl p x
+  gliftShowsPrec sp sl p (L1 x) = gliftShowsPrec sp sl p x
+  gliftShowsPrec sp sl p (R1 x) = gliftShowsPrec sp sl p x
 
 instance (Constructor c, GShow1Con f, IsNullaryCon f) => GShow1 (C1 c f) where
-  gliftShowsPrec opts sp sl = c1ShowsPrec $ \t -> gliftShowsPrecCon opts t sp sl
+  gliftShowsPrec sp sl = c1ShowsPrec $ \t -> gliftShowsPrecCon t sp sl
 
 c1ShowsPrec :: (Constructor c, IsNullaryCon f)
             => (ConType -> Int -> f p -> ShowS) -> Int -> C1 c f p -> ShowS
@@ -847,17 +843,17 @@ class
     (forall a. Show a => GShowCon (f a)) =>
 #endif
     GShow1Con f where
-  gliftShowsPrecCon :: Options -> ConType -> (Int -> a -> ShowS) -> ([a] -> ShowS)
+  gliftShowsPrecCon :: ConType -> (Int -> a -> ShowS) -> ([a] -> ShowS)
                     -> Int -> f a -> ShowS
 
 instance GShow1Con U1 where
-  gliftShowsPrecCon _ _ _ _ _ U1 = id
+  gliftShowsPrecCon _ _ _ _ U1 = id
 
 instance Show c => GShow1Con (K1 i c) where
-  gliftShowsPrecCon _ _ _ _ p (K1 x) = showsPrec p x
+  gliftShowsPrecCon _ _ _ p (K1 x) = showsPrec p x
 
 instance (Selector s, GShow1Con f) => GShow1Con (S1 s f) where
-  gliftShowsPrecCon opts t sp sl = s1ShowsPrec $ gliftShowsPrecCon opts t sp sl
+  gliftShowsPrecCon t sp sl = s1ShowsPrec $ gliftShowsPrecCon t sp sl
 
 s1ShowsPrec :: Selector s => (Int -> f p -> ShowS) -> Int -> S1 s f p -> ShowS
 s1ShowsPrec sp p sel@(M1 x)
@@ -876,9 +872,9 @@ s1ShowsPrec sp p sel@(M1 x)
     selectorName = selName sel
 
 instance (GShow1Con f, GShow1Con g) => GShow1Con (f :*: g) where
-  gliftShowsPrecCon opts t sp sl =
-    productShowsPrec (gliftShowsPrecCon opts t sp sl)
-                     (gliftShowsPrecCon opts t sp sl)
+  gliftShowsPrecCon t sp sl =
+    productShowsPrec (gliftShowsPrecCon t sp sl)
+                     (gliftShowsPrecCon t sp sl)
                      t
 
 productShowsPrec :: (Int -> f p -> ShowS) -> (Int -> g p -> ShowS)
@@ -909,56 +905,49 @@ productShowsPrec spf spg t p (a :*: b) =
                    else showChar '`' . showString o . showChar '`'
 
 instance GShow1Con Par1 where
-  gliftShowsPrecCon _ _ sp _ p (Par1 x) = sp p x
+  gliftShowsPrecCon _ sp _ p (Par1 x) = sp p x
 
 instance Show1 f => GShow1Con (Rec1 f) where
-  gliftShowsPrecCon _ _ sp sl p (Rec1 x) = liftShowsPrec sp sl p x
+  gliftShowsPrecCon _ sp sl p (Rec1 x) = liftShowsPrec sp sl p x
 
 instance (Show1 f, GShow1Con g) => GShow1Con (f :.: g) where
-  gliftShowsPrecCon opts t sp sl p (Comp1 x) =
-    let glspc = gliftShowsPrecCon opts t sp sl
+  gliftShowsPrecCon t sp sl p (Comp1 x) =
+    let glspc = gliftShowsPrecCon t sp sl
     in liftShowsPrec glspc (showListWith (glspc 0)) p x
 
 instance GShow1Con UChar where
-  gliftShowsPrecCon opts _ _ _ = uCharShowsPrec opts
+  gliftShowsPrecCon _ _ _ = uCharShowsPrec
 
 instance GShow1Con UDouble where
-  gliftShowsPrecCon opts _ _ _ = uDoubleShowsPrec opts
+  gliftShowsPrecCon _ _ _ = uDoubleShowsPrec
 
 instance GShow1Con UFloat where
-  gliftShowsPrecCon opts _ _ _ = uFloatShowsPrec opts
+  gliftShowsPrecCon _ _ _ = uFloatShowsPrec
 
 instance GShow1Con UInt where
-  gliftShowsPrecCon opts _ _ _ = uIntShowsPrec opts
+  gliftShowsPrecCon _ _ _ = uIntShowsPrec
 
 instance GShow1Con UWord where
-  gliftShowsPrecCon opts _ _ _ = uWordShowsPrec opts
+  gliftShowsPrecCon _ _ _ = uWordShowsPrec
 
-uCharShowsPrec :: Options -> Int -> UChar p -> ShowS
-uCharShowsPrec opts p (UChar c) =
-  showsPrec (hashPrec opts p) (C# c) . oneHash opts
+uCharShowsPrec :: Int -> UChar p -> ShowS
+uCharShowsPrec p (UChar c) = shows (C# c) . oneHash
 
-uDoubleShowsPrec :: Options -> Int -> UDouble p -> ShowS
-uDoubleShowsPrec opts p (UDouble d) =
-  showsPrec (hashPrec opts p) (D# d) . twoHash opts
+uDoubleShowsPrec :: Int -> UDouble p -> ShowS
+uDoubleShowsPrec p (UDouble d) = shows (D# d) . twoHash
 
-uFloatShowsPrec :: Options -> Int -> UFloat p -> ShowS
-uFloatShowsPrec opts p (UFloat f) =
-  showsPrec (hashPrec opts p) (F# f) . oneHash opts
+uFloatShowsPrec :: Int -> UFloat p -> ShowS
+uFloatShowsPrec p (UFloat f) = shows (F# f) . oneHash
 
-uIntShowsPrec :: Options -> Int -> UInt p -> ShowS
-uIntShowsPrec opts p (UInt i) =
-  showsPrec (hashPrec opts p) (I# i) . oneHash opts
+uIntShowsPrec :: Int -> UInt p -> ShowS
+uIntShowsPrec p (UInt i) = shows (I# i) . oneHash
 
-uWordShowsPrec :: Options -> Int -> UWord p -> ShowS
-uWordShowsPrec opts p (UWord w) =
-  showsPrec (hashPrec opts p) (W# w) . twoHash opts
+uWordShowsPrec :: Int -> UWord p -> ShowS
+uWordShowsPrec p (UWord w) = shows (W# w) . twoHash
 
-oneHash, twoHash :: Options -> ShowS
-hashPrec         :: Options -> Int -> Int
-oneHash  opts = if ghc8ShowBehavior opts then showChar   '#'  else id
-twoHash  opts = if ghc8ShowBehavior opts then showString "##" else id
-hashPrec opts = if ghc8ShowBehavior opts then const 0         else id
+oneHash, twoHash :: ShowS
+oneHash = showChar '#'
+twoHash = showString "##"
 
 -------------------------------------------------------------------------------
 -- * GenericFunctorClasses
